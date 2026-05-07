@@ -13,4 +13,7 @@ dist_final/
 .models/
 素材库/
 .vscode/
+__pycache__/
+*.pyc
+scripts/reports/
 
