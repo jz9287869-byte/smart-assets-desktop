@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     list: () => ipcRenderer.invoke('library:list'),
     create: (data) => ipcRenderer.invoke('library:create', data),
     switch: (data) => ipcRenderer.invoke('library:switch', data),
+    rename: (data) => ipcRenderer.invoke('library:rename', data),
     delete: (data) => ipcRenderer.invoke('library:delete', data),
     deleteFolder: (data) => ipcRenderer.invoke('library:delete-folder', data),
     refresh: () => ipcRenderer.invoke('library:refresh'),
