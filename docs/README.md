@@ -6,12 +6,16 @@
 
 1. 把安装包上传到 GitHub Releases
 2. 打开 `docs/index.html`
-3. 把 `YOUR_GITHUB_NAME/YOUR_REPO` 改成你的仓库名
-
-示例：
+3. 如果你沿用当前默认仓库名，可以保持不改；当前已经写成：
 
 ```js
-const repo = "zhangjin/smart-assets";
+const repo = "jz9287869-byte/smart-assets-desktop";
+```
+
+如果你后面换仓库名，再改这里：
+
+```js
+const repo = "你的用户名/你的仓库名";
 ```
 
 然后去 GitHub 仓库：
