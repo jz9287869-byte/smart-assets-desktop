@@ -3,6 +3,7 @@ const path = require('path');
 const { exec } = require('child_process');
 const util = require('util');
 const execAsync = util.promisify(exec);
+const { IMAGE_FORMATS } = require('./supportedFormats');
 
 function safeConsole(method, ...args) {
   try {
@@ -25,11 +26,7 @@ class ImportService {
   constructor(libraryDatabase, processingWorker) {
     this.db = libraryDatabase;
     this.worker = processingWorker;
-    this.supportedFormats = new Set([
-      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp',
-      '.raw', '.cr2', '.nef', '.arw', // 相机RAW
-      '.mp4', '.mov', '.avi' // 视频（仅记录，不生成缩略图）
-    ]);
+    this.supportedFormats = new Set(IMAGE_FORMATS);
   }
 
   /**

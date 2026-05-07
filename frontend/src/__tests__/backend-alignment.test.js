@@ -1,5 +1,6 @@
 import React from 'react';
 import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import MainApp from '../components/MainApp';
 
 async function flushAll() {
@@ -43,6 +44,10 @@ function createElectronApi(overrides = {}) {
       list: jest.fn().mockResolvedValue({
         success: true,
         libraries: [{ id: 'lib_1', name: '素材库', path: 'D:\\素材库', total: 2, isActive: true }],
+      }),
+      rename: jest.fn().mockResolvedValue({
+        success: true,
+        library: { id: 'lib_1', name: '新素材库', path: 'D:\\素材库', total: 2, isActive: true },
       }),
       getFolderTree: jest.fn().mockResolvedValue({ success: true, tree: ['动物'] }),
       refresh: jest.fn().mockResolvedValue({ success: true, stats: { imported: 1 } }),
@@ -185,5 +190,48 @@ describe('Backend alignment', () => {
 
     expect(await screen.findByText(/Electron 28\.1\.0/i)).toBeInTheDocument();
     expect(screen.getByText(/Smart Assets/i)).toBeInTheDocument();
+  });
+
+  test('renames library from library manager view', async () => {
+    const listMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        success: true,
+        libraries: [{ id: 'lib_1', name: '素材库', path: 'D:\\素材库', total: 2, isActive: true }],
+      })
+      .mockResolvedValueOnce({
+        success: true,
+        libraries: [{ id: 'lib_1', name: '新素材库', path: 'D:\\素材库', total: 2, isActive: true }],
+      });
+
+    const renameMock = jest.fn().mockResolvedValue({
+      success: true,
+      library: { id: 'lib_1', name: '新素材库', path: 'D:\\素材库', total: 2, isActive: true },
+    });
+
+    window.electronAPI = createElectronApi({
+      libraryAPI: {
+        list: listMock,
+        rename: renameMock,
+      },
+    });
+
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await renderAndFlush(<MainApp />);
+    await flushAll();
+
+    await user.click(screen.getByRole('button', { name: /资源库/i }));
+    await flushAll();
+
+    await user.click(await screen.findByTitle('修改名称'));
+    const input = await screen.findByPlaceholderText(/例如：旅行风景素材库/i);
+    await user.clear(input);
+    await user.type(input, '新素材库');
+    await user.click(screen.getByRole('button', { name: /保存名称/i }));
+
+    await flushAll();
+
+    expect(renameMock).toHaveBeenCalledWith({ libraryId: 'lib_1', name: '新素材库' });
+    expect(await screen.findByText('新素材库')).toBeInTheDocument();
   });
 });

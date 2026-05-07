@@ -10,6 +10,7 @@ const { LibraryManager } = require('./libraryDatabase');
 const { ProcessingWorker } = require('./processingWorker');
 const { ImportService } = require('./importService');
 const { buildNaturalLanguageSearchState } = require('./naturalLanguageSearch');
+const { IMAGE_FORMAT_NAMES } = require('./supportedFormats');
 
 // 工具模块
 const { ok, fail, wrap } = require('./ipcResponse');
@@ -222,7 +223,7 @@ const store = new Store({
   defaults: {
     watchFolders: [],
     trashFolder: 'D:\\素材库回收站',
-    supportedFormats: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'],
+    supportedFormats: [...IMAGE_FORMAT_NAMES],
     cpuLimit: 30,
     usePythonEngine: hasLocalChineseClipModel(),
     enableCloudReview: true,
@@ -250,6 +251,13 @@ const currentWatchFolders = store.get('watchFolders') || [];
 const validWatchFolders = currentWatchFolders.filter(f => typeof f === 'string');
 if (validWatchFolders.length !== currentWatchFolders.length) {
   store.set('watchFolders', validWatchFolders);
+}
+const currentSupportedFormats = Array.isArray(store.get('supportedFormats')) ? store.get('supportedFormats') : [];
+const normalizedSupportedFormats = [...IMAGE_FORMAT_NAMES];
+const hasOnlySupportedImages = currentSupportedFormats.length === normalizedSupportedFormats.length
+  && currentSupportedFormats.every((ext, index) => String(ext || '').toLowerCase() === normalizedSupportedFormats[index]);
+if (!hasOnlySupportedImages) {
+  store.set('supportedFormats', normalizedSupportedFormats);
 }
 let currentLibrary = null;
 let currentWorker = null;
@@ -1173,6 +1181,16 @@ ipcMain.handle('library:delete', async (event, { libraryId }) => {
       deletedLibraryId: libraryId,
       nextLibraryId: fallbackLibrary?.id || null
     };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('library:rename', async (event, { libraryId, name }) => {
+  try {
+    if (!libraryManager) throw new Error('系统未初始化');
+    const library = libraryManager.renameLibrary(libraryId, name);
+    return { success: true, library };
   } catch (error) {
     return { success: false, error: error.message };
   }

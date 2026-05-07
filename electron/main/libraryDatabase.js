@@ -1476,6 +1476,27 @@ class LibraryManager {
 
     this.saveConfig();
   }
+
+  renameLibrary(libraryId, name) {
+    const normalizedName = String(name || '').trim();
+    if (!normalizedName) {
+      throw new Error('资源库名称不能为空');
+    }
+
+    const library = this.globalConfig.libraries.find((lib) => lib.id === libraryId);
+    if (!library) {
+      throw new Error(`资源库不存在: ${libraryId}`);
+    }
+
+    library.name = normalizedName;
+    this.saveConfig();
+    return {
+      ...library,
+      isActive: library.id === this.globalConfig.activeLibraryId,
+      isLoaded: this.libraries.has(library.id),
+    };
+  }
+
   // 获取当前激活的资源库
   getActiveLibrary() {
     const id = this.globalConfig.activeLibraryId;
