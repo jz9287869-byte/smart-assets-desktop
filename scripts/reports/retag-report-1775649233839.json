@@ -1,0 +1,193 @@
+{
+  "ok": true,
+  "startedAt": "2026-04-08T11:53:53.839Z",
+  "libraryPath": "Y:\\",
+  "libraryId": "retag_1775648920790",
+  "cloudReview": {
+    "enabled": true,
+    "provider": "openai_compatible",
+    "apiKey": "",
+    "baseURL": "http://127.0.0.1:11434/v1",
+    "model": "gemma4:e2b",
+    "timeoutMs": 180000
+  },
+  "usePythonEngine": true,
+  "args": {
+    "limit": 30,
+    "offset": 0,
+    "libraryPath": "Y:\\",
+    "libraryId": "",
+    "aiConcurrency": 1,
+    "aiTaskTimeoutMs": 600000,
+    "timeoutMs": 1800000,
+    "cloudEnabled": true,
+    "imageIds": [
+      2632
+    ]
+  },
+  "selectedCount": 1,
+  "queueResult": {
+    "requested": 1,
+    "thumbnailQueued": 0,
+    "aiQueued": 1,
+    "totalQueued": 1
+  },
+  "waitResult": {
+    "done": true,
+    "waitedMs": 312889
+  },
+  "beforeConflictCount": 0,
+  "afterConflictCount": 0,
+  "conflictReducedBy": 0,
+  "queueStats": [
+    {
+      "task_type": "aiTag",
+      "status": "completed",
+      "count": 4
+    },
+    {
+      "task_type": "aiTag",
+      "status": "failed",
+      "count": 1
+    },
+    {
+      "task_type": "thumbnail",
+      "status": "completed",
+      "count": 1
+    }
+  ],
+  "failedEvents": [],
+  "sampleBeforeTags": {
+    "2632": [
+      {
+        "name": "横屏",
+        "category": "custom",
+        "source": "ai_photo_rule",
+        "confidence": 0.99
+      },
+      {
+        "name": "夜幕黑",
+        "category": "color",
+        "source": "ai_color",
+        "confidence": 0.92
+      },
+      {
+        "name": "户外",
+        "category": "location",
+        "source": "deepseek_review",
+        "confidence": 0.92
+      },
+      {
+        "name": "水景",
+        "category": "scene",
+        "source": "deepseek_review",
+        "confidence": 0.92
+      },
+      {
+        "name": "广角震撼风光",
+        "category": "custom",
+        "source": "ai_photo_rule",
+        "confidence": 0.9
+      },
+      {
+        "name": "桥梁",
+        "category": "scene",
+        "source": "deepseek_review",
+        "confidence": 0.9
+      },
+      {
+        "name": "纯风景",
+        "category": "scene",
+        "source": "ai",
+        "confidence": 0.428
+      },
+      {
+        "name": "蓝眼泪",
+        "category": "scene",
+        "source": "ai",
+        "confidence": 0.423
+      },
+      {
+        "name": "河流",
+        "category": "scene",
+        "source": "ai",
+        "confidence": 0.419
+      },
+      {
+        "name": "古镇",
+        "category": "scene",
+        "source": "ai",
+        "confidence": 0.419
+      }
+    ]
+  },
+  "sampleAfter": [
+    {
+      "id": 2632,
+      "filename": "aa94b6fa548342caade09e9a55bcdc68.jpeg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "横屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "夜幕黑",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "水景",
+          "category": "scene",
+          "source": "deepseek_review",
+          "confidence": 0.92
+        },
+        {
+          "name": "广角震撼风光",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.9
+        },
+        {
+          "name": "自然风光",
+          "category": "location",
+          "source": "deepseek_review",
+          "confidence": 0.9
+        },
+        {
+          "name": "中国",
+          "category": "location",
+          "source": "deepseek_review",
+          "confidence": 0.85
+        },
+        {
+          "name": "桥梁",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.445
+        },
+        {
+          "name": "纯风景",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.428
+        },
+        {
+          "name": "蓝眼泪",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.423
+        },
+        {
+          "name": "河流",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.419
+        }
+      ]
+    }
+  ]
+}

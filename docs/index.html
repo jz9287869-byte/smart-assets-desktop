@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智能素材管理系统下载</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.78);
+      --line: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-strong: #16a34a;
+      --accent-soft: rgba(34, 197, 94, 0.18);
+      --warning: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.35), transparent 32%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 28%),
+        linear-gradient(135deg, #020617 0%, #0f172a 52%, #111827 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 980px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 30px 80px rgba(2, 6, 23, 0.55);
+      overflow: hidden;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      padding: 48px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #bbf7d0;
+      font-size: 14px;
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(32px, 5vw, 56px);
+      line-height: 1.02;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.8;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 54px;
+      padding: 0 22px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+      color: #04130a;
+      box-shadow: 0 18px 40px rgba(34, 197, 94, 0.25);
+    }
+
+    .button.secondary {
+      border-color: var(--line);
+      background: rgba(15, 23, 42, 0.65);
+      color: var(--text);
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 24px;
+      background:
+        linear-gradient(180deg, rgba(30, 41, 59, 0.82) 0%, rgba(15, 23, 42, 0.92) 100%);
+    }
+
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .item {
+      padding: 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.28);
+    }
+
+    .item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .item span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .footer {
+      padding: 0 48px 40px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .warning {
+      color: #fde68a;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: rgba(148, 163, 184, 0.12);
+      color: #e5e7eb;
+      font-family: Consolas, Monaco, monospace;
+    }
+
+    @media (max-width: 820px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 28px;
+      }
+
+      .footer {
+        padding: 0 28px 28px;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">本地 AI 完整版</div>
+        <h1>智能素材管理系统</h1>
+        <p class="lead">
+          下载后即可安装使用，适合希望在本地管理图片、生成缩略图、批量打标和使用本地 AI 能力的用户。
+        </p>
+        <div class="actions">
+          <a class="button primary" id="download-link" href="#" target="_blank" rel="noreferrer">下载 Windows 安装包</a>
+          <a class="button secondary" id="release-link" href="#" target="_blank" rel="noreferrer">查看版本更新</a>
+        </div>
+        <div class="meta">
+          当前提供的是 <strong>带本地 AI 完整版</strong>。<br>
+          首次启动如果本地 AI 组件需要初始化，请按应用提示完成即可。
+        </div>
+      </div>
+
+      <aside class="card">
+        <h2>这个版本包含</h2>
+        <div class="stack">
+          <div class="item">
+            <strong>完整桌面应用</strong>
+            <span>适合直接安装，不需要自己配置开发环境。</span>
+          </div>
+          <div class="item">
+            <strong>本地 AI 相关资源</strong>
+            <span>适合需要本地推理、批量标签和语义检索的使用场景。</span>
+          </div>
+          <div class="item">
+            <strong>GitHub Releases 分发</strong>
+            <span>下载链接稳定，后续更新版本也方便继续维护。</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="footer">
+      <div class="warning">
+        如果 Windows 首次下载时出现安全提示，这是未做代码签名时的常见现象。
+      </div>
+      <div>
+        使用方法：把下面脚本里的 <code>YOUR_GITHUB_NAME/YOUR_REPO</code> 改成你的仓库名，再把安装包上传到 GitHub Release。
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const repo = "YOUR_GITHUB_NAME/YOUR_REPO";
+    const assetName = "智能素材管理系统-Setup-1.0.0.exe";
+
+    const encodedAsset = encodeURIComponent(assetName);
+    const releasePage = `https://github.com/${repo}/releases/latest`;
+    const assetUrl = `https://github.com/${repo}/releases/latest/download/${encodedAsset}`;
+
+    const downloadLink = document.getElementById("download-link");
+    const releaseLink = document.getElementById("release-link");
+
+    downloadLink.href = assetUrl;
+    releaseLink.href = releasePage;
+  </script>
+</body>
+</html>

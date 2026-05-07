@@ -1,0 +1,104 @@
+{
+  "name": "smart-image-library",
+  "version": "1.0.0",
+  "description": "Smart image asset manager",
+  "main": "electron/main/main.js",
+  "engines": {
+    "node": ">=18.12.0"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run watch:react\" \"timeout /t 30 /nobreak >nul && electron .\"",
+    "watch:react": "cd frontend && npm start",
+    "setup:local-ai": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-ai.ps1",
+    "test:ui-smoke": "node scripts/smoke-ui.js",
+    "test:backend": "set ELECTRON_RUN_AS_NODE=1&& electron tests/backend/run-tests.js",
+    "audit:aux-tags": "node scripts/evaluate-aux-tags.js",
+    "coverage:backend": "set ELECTRON_RUN_AS_NODE=1&& c8 -r text -r lcov electron tests/backend/run-tests.js",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win --x64",
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild": "electron-rebuild -f -w better-sqlite3"
+  },
+  "keywords": [
+    "electron",
+    "image-management",
+    "ai",
+    "local-search"
+  ],
+  "author": "Smart Assets",
+  "license": "MIT",
+  "devDependencies": {
+    "c8": "^10.1.2",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "better-sqlite3": "^9.2.2",
+    "chokidar": "^3.5.3",
+    "electron-store": "^8.1.0",
+    "sharp": "^0.33.2"
+  },
+  "build": {
+    "appId": "com.walk20.smart-image-library",
+    "productName": "智能素材管理系统",
+    "icon": "assets/icon.ico",
+    "directories": {
+      "output": "dist_final"
+    },
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "files": [
+      "electron/main/**/*",
+      "electron/preload/**/*",
+      "frontend/build/**/*",
+      "node_modules/**/*",
+      "python-backend/**/*",
+      "requirements.txt",
+      "setup-local-ai.cmd"
+    ],
+    "extraResources": [
+      {
+        "from": ".models",
+        "to": "models",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "scripts/setup-local-ai.ps1",
+        "to": "setup/setup-local-ai.ps1"
+      },
+      {
+        "from": "setup-local-ai.cmd",
+        "to": "setup-local-ai.cmd"
+      }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "shortcutName": "智能素材管理系统"
+    }
+  }
+}

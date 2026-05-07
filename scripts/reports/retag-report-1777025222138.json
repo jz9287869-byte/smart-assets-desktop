@@ -1,0 +1,908 @@
+{
+  "ok": true,
+  "startedAt": "2026-04-24T10:07:02.138Z",
+  "libraryPath": "D:\\素材库",
+  "libraryId": "lib_1775411157597_meg17ptrm",
+  "cloudReview": {
+    "enabled": false,
+    "provider": "openai_compatible",
+    "apiKey": "",
+    "baseURL": "http://127.0.0.1:11434/v1",
+    "model": "gemma3:4b",
+    "timeoutMs": 180000
+  },
+  "usePythonEngine": true,
+  "args": {
+    "limit": 10000,
+    "offset": 0,
+    "libraryPath": "D:\\素材库",
+    "libraryId": "",
+    "aiConcurrency": 1,
+    "aiTaskTimeoutMs": 600000,
+    "timeoutMs": 7200000,
+    "cloudEnabled": false,
+    "resetAiState": true,
+    "imageIds": []
+  },
+  "selectedCount": 55,
+  "queueResult": {
+    "requested": 55,
+    "thumbnailQueued": 0,
+    "aiQueued": 55,
+    "totalQueued": 55
+  },
+  "resetSummary": {
+    "queueDeleted": 55,
+    "imageTagsDeleted": 87,
+    "imagesReset": 55
+  },
+  "waitResult": {
+    "done": true,
+    "waitedMs": 849795
+  },
+  "beforeConflictCount": 1,
+  "afterConflictCount": 2,
+  "conflictReducedBy": -1,
+  "queueStats": [
+    {
+      "task_type": "aiTag",
+      "status": "completed",
+      "count": 54
+    },
+    {
+      "task_type": "aiTag",
+      "status": "failed",
+      "count": 1
+    }
+  ],
+  "failedEvents": [
+    {
+      "imageId": 2719,
+      "taskType": "aiTag",
+      "error": "AI tagging timed out after 600s"
+    }
+  ],
+  "sampleBeforeTags": {
+    "2662": [
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.96
+      }
+    ],
+    "2663": [
+      {
+        "name": "单人",
+        "category": "people",
+        "source": "ai_semantic_floor",
+        "confidence": 0.68
+      }
+    ],
+    "2664": [
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.96
+      }
+    ],
+    "2665": [
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.96
+      }
+    ],
+    "2666": [],
+    "2667": [
+      {
+        "name": "单人",
+        "category": "people",
+        "source": "manual",
+        "confidence": 1
+      },
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.96
+      }
+    ],
+    "2668": [
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.96
+      }
+    ],
+    "2719": [
+      {
+        "name": "人物",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.88
+      },
+      {
+        "name": "单人",
+        "category": "people",
+        "source": "ai_people_hint",
+        "confidence": 0.8
+      },
+      {
+        "name": "春天",
+        "category": "scene",
+        "source": "ai_history_hint",
+        "confidence": 0.62
+      }
+    ],
+    "2720": [
+      {
+        "name": "春天",
+        "category": "scene",
+        "source": "ai_history_hint",
+        "confidence": 0.62
+      }
+    ],
+    "2721": [
+      {
+        "name": "春天",
+        "category": "scene",
+        "source": "ai_history_hint",
+        "confidence": 0.62
+      }
+    ],
+    "2722": [
+      {
+        "name": "春天",
+        "category": "scene",
+        "source": "ai_history_hint",
+        "confidence": 0.62
+      }
+    ],
+    "2882": [
+      {
+        "name": "多人",
+        "category": "people",
+        "source": "ai_semantic_floor",
+        "confidence": 0.68
+      }
+    ]
+  },
+  "sampleAfter": [
+    {
+      "id": 2882,
+      "filename": "u=3560345516,1846448800&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "雪峰白",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.84
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.72
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_semantic_floor",
+          "confidence": 0.68
+        },
+        {
+          "name": "阴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.467
+        },
+        {
+          "name": "仰天大笑",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.43
+        },
+        {
+          "name": "大学生",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.429
+        },
+        {
+          "name": "跨年夜",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.416
+        },
+        {
+          "name": "雪天",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.41
+        },
+        {
+          "name": "观景台",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.406
+        }
+      ]
+    },
+    {
+      "id": 2722,
+      "filename": "u=818101370,3359092353&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "天空蓝",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "春天",
+          "category": "scene",
+          "source": "ai_history_hint",
+          "confidence": 0.62
+        }
+      ]
+    },
+    {
+      "id": 2721,
+      "filename": "u=2229398422,2414936588&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "雾霭灰",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "春天",
+          "category": "scene",
+          "source": "ai_history_hint",
+          "confidence": 0.62
+        }
+      ]
+    },
+    {
+      "id": 2720,
+      "filename": "d0e1e597cc8be47e9270a3c20bb50759.jpeg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "岩壁棕",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "春天",
+          "category": "scene",
+          "source": "ai_history_hint",
+          "confidence": 0.62
+        }
+      ]
+    },
+    {
+      "id": 2719,
+      "filename": "8gve3yxin0dinfqiew-cwliqzv_xfyyhkuzp_lk5rwusblpiz85rm5hhtjoecys-.jpg",
+      "process_status": "thumbnail",
+      "tags": [
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.88
+        },
+        {
+          "name": "单人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.8
+        },
+        {
+          "name": "春天",
+          "category": "scene",
+          "source": "ai_history_hint",
+          "confidence": 0.62
+        }
+      ]
+    },
+    {
+      "id": 2668,
+      "filename": "u=79654300,1513597890&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.96
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.94
+        },
+        {
+          "name": "夜幕黑",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.766
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.451
+        },
+        {
+          "name": "汉服",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.444
+        },
+        {
+          "name": "泰服",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.438
+        },
+        {
+          "name": "盛夏烈日",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.436
+        },
+        {
+          "name": "微单",
+          "category": "device",
+          "source": "ai",
+          "confidence": 0.428
+        },
+        {
+          "name": "拍立得",
+          "category": "device",
+          "source": "ai",
+          "confidence": 0.427
+        }
+      ]
+    },
+    {
+      "id": 2667,
+      "filename": "u=774796278,1268675110&fm=253&fmt=auto&app=138&f=JPEG.webp",
+      "process_status": "manual_tagged",
+      "tags": [
+        {
+          "name": "单人",
+          "category": "people",
+          "source": "manual",
+          "confidence": 1
+        },
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.96
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.94
+        },
+        {
+          "name": "天空蓝",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.793
+        },
+        {
+          "name": "昆明",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.45
+        },
+        {
+          "name": "泰服",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.438
+        },
+        {
+          "name": "花海",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.434
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.426
+        },
+        {
+          "name": "汉服",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.424
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.415
+        }
+      ]
+    },
+    {
+      "id": 2666,
+      "filename": "u=649204430,688222902&fm=253&fmt=auto&app=120&f=JPEG.webp",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "夜幕黑",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "青海",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.453
+        },
+        {
+          "name": "牦牛",
+          "category": "animal",
+          "source": "ai",
+          "confidence": 0.444
+        },
+        {
+          "name": "山谷",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.434
+        },
+        {
+          "name": "盛夏烈日",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.432
+        },
+        {
+          "name": "高山",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.431
+        },
+        {
+          "name": "峡谷",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.431
+        },
+        {
+          "name": "山脉",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.43
+        }
+      ]
+    },
+    {
+      "id": 2665,
+      "filename": "u=397834441,2089661641&fm=253&fmt=auto&app=138&f=JPEG.webp",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.96
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.94
+        },
+        {
+          "name": "雪峰白",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.84
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "泰服",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.416
+        },
+        {
+          "name": "客房服务员",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.406
+        },
+        {
+          "name": "微单",
+          "category": "device",
+          "source": "ai",
+          "confidence": 0.405
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.4
+        },
+        {
+          "name": "室外",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.399
+        }
+      ]
+    },
+    {
+      "id": 2664,
+      "filename": "u=3809042155,3439323783&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.96
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.94
+        },
+        {
+          "name": "天空蓝",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.84
+        },
+        {
+          "name": "哈尔滨",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.453
+        },
+        {
+          "name": "一家三口",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.45
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.449
+        },
+        {
+          "name": "雪天",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.433
+        },
+        {
+          "name": "仰天大笑",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.429
+        },
+        {
+          "name": "凛冬冰雪",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.428
+        },
+        {
+          "name": "雪原",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.426
+        }
+      ]
+    },
+    {
+      "id": 2663,
+      "filename": "u=3761324649,2393576934&fm=173&app=49&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "横屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "湖水青",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "广角震撼风光",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.9
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.72
+        },
+        {
+          "name": "单人",
+          "category": "people",
+          "source": "ai_semantic_floor",
+          "confidence": 0.68
+        },
+        {
+          "name": "晴天",
+          "category": "scene",
+          "source": "ai_weather_floor",
+          "confidence": 0.64
+        },
+        {
+          "name": "夏天",
+          "category": "scene",
+          "source": "ai_season_floor",
+          "confidence": 0.63
+        },
+        {
+          "name": "自然风光",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.419
+        },
+        {
+          "name": "异域风情",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.417
+        },
+        {
+          "name": "单人旅行",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.41
+        },
+        {
+          "name": "海边",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.399
+        },
+        {
+          "name": "游客",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.397
+        }
+      ]
+    },
+    {
+      "id": 2662,
+      "filename": "u=332923318,170454427&fm=253&app=138&f=JPEG.jpg",
+      "process_status": "auto_tagged",
+      "tags": [
+        {
+          "name": "竖屏",
+          "category": "custom",
+          "source": "ai_photo_rule",
+          "confidence": 0.99
+        },
+        {
+          "name": "多人",
+          "category": "people",
+          "source": "ai_people_hint",
+          "confidence": 0.96
+        },
+        {
+          "name": "人物",
+          "category": "people",
+          "source": "opencv_body",
+          "confidence": 0.94
+        },
+        {
+          "name": "天空蓝",
+          "category": "color",
+          "source": "ai_color",
+          "confidence": 0.92
+        },
+        {
+          "name": "冬天",
+          "category": "scene",
+          "source": "ai_visual_season",
+          "confidence": 0.84
+        },
+        {
+          "name": "极地破冰探险",
+          "category": "event",
+          "source": "ai",
+          "confidence": 0.444
+        },
+        {
+          "name": "哈尔滨",
+          "category": "location",
+          "source": "ai",
+          "confidence": 0.444
+        },
+        {
+          "name": "雪天",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.435
+        },
+        {
+          "name": "凛冬冰雪",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.434
+        },
+        {
+          "name": "闺蜜团",
+          "category": "people",
+          "source": "ai",
+          "confidence": 0.429
+        },
+        {
+          "name": "雪原",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.428
+        },
+        {
+          "name": "雪景",
+          "category": "scene",
+          "source": "ai",
+          "confidence": 0.423
+        }
+      ]
+    }
+  ]
+}

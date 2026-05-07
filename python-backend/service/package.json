@@ -1,0 +1,13 @@
+{
+  "name": "smart-image-library-backend",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.2.2"
+  }
+}
+
