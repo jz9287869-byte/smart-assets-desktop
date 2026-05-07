@@ -13,9 +13,9 @@ import { formatFileSize, getImageUrl, parseTags } from '../utils/imageUtils';
 
 const EXAMPLE_PROMPTS = [
   '找一张单人女生，新疆草原的照片',
-  '找一张有马和草原的图片',
+  '搜索伊犁文件夹里的草原照片',
+  '搜索关键词：西湖景区 路牌',
   '想找纯风景的雪山照片',
-  '搜索新疆湖泊和雪山同框的照片',
 ];
 
 const MODE_LABELS = {
@@ -236,7 +236,7 @@ export default function NaturalLanguageSearch({ showToast }) {
           <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/60 p-5 shadow-2xl shadow-slate-950/10">
             <div className="mb-3 text-sm font-semibold text-slate-100">输入检索条件</div>
             <p className="mb-4 text-xs leading-5 text-slate-400">
-              示例：找一张单人女生，新疆草原的照片
+              可输入标签条件、文件夹名称、关键词，例如：搜索伊犁文件夹里的草原照片
             </p>
 
             <div className="relative">
@@ -245,7 +245,7 @@ export default function NaturalLanguageSearch({ showToast }) {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 rows={6}
-                placeholder="例如：找一张单人女生，新疆草原的照片"
+                placeholder="例如：搜索伊犁文件夹里的草原照片，或输入西湖景区 路牌"
                 className="min-h-[180px] w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-4 pl-11 pr-4 text-sm leading-6 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -291,6 +291,13 @@ export default function NaturalLanguageSearch({ showToast }) {
             items={searchResult.intent?.implicitTags || []}
             accentClass="text-blue-300"
             emptyText="没有辅助条件"
+          />
+          <IntentSection
+            icon={Search}
+            title="关键词 / 文件夹"
+            items={searchResult.intent?.keywordHints || []}
+            accentClass="text-cyan-300"
+            emptyText="没有额外关键词"
           />
           <IntentSection
             icon={MapPin}

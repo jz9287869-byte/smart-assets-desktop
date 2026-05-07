@@ -131,6 +131,81 @@ function uniqueStrings(values) {
   return output;
 }
 
+const SUPPLEMENTAL_STOP_TOKENS = new Set([
+  '找',
+  '找一张',
+  '找张',
+  '搜索',
+  '搜图',
+  '检索',
+  '查询',
+  '图片',
+  '照片',
+  '图',
+  '一张',
+  '一个',
+  '一下',
+  '帮我',
+  '我想',
+  '想找',
+  '想搜',
+  '请找',
+  '请搜',
+  '的',
+  '在',
+  '里',
+  '里面',
+  '里的',
+  '文件夹',
+  '目录',
+  '素材',
+  '相关',
+  '包含',
+  '关于',
+  'with',
+  'from',
+]);
+
+function stripMatchedPhrases(normalizedQuery, phrases = []) {
+  let remaining = ` ${String(normalizedQuery || '')} `;
+  for (const phrase of phrases) {
+    const normalizedPhrase = normalizeText(phrase);
+    if (!normalizedPhrase) {
+      continue;
+    }
+    remaining = remaining.split(normalizedPhrase).join(' ');
+  }
+  return remaining.replace(/\s+/g, ' ').trim();
+}
+
+function extractKeywordHints(rawQuery, normalizedQuery, phrasesToStrip = []) {
+  const strippedQuery = stripMatchedPhrases(
+    stripMatchedPhrases(normalizedQuery, phrasesToStrip),
+    Array.from(SUPPLEMENTAL_STOP_TOKENS)
+  );
+  const rawTokens = uniqueStrings(
+    strippedQuery
+      .split(/\s+/)
+      .map((token) => String(token || '').trim())
+      .filter(Boolean)
+  );
+
+  return uniqueStrings(
+    rawTokens.filter((token) => {
+      if (!token) {
+        return false;
+      }
+      if (STOP_TOKENS.has(token) || SUPPLEMENTAL_STOP_TOKENS.has(token)) {
+        return false;
+      }
+      if (/^[a-z0-9]+$/.test(token)) {
+        return token.length >= 2;
+      }
+      return token.length >= 2;
+    })
+  );
+}
+
 function splitTags(rawTags) {
   if (!rawTags) return [];
   if (Array.isArray(rawTags)) {
@@ -172,6 +247,7 @@ function parseNaturalLanguageQuery(query, options = {}) {
   const implicitTags = [];
   const excludedTags = [];
   const matchedAliases = [];
+  const matchedNormalizedPhrases = [];
 
   const aliasEntries = BASE_ALIAS_ENTRIES
     .map(([phrase, canonical]) => ({
@@ -213,11 +289,13 @@ function parseNaturalLanguageQuery(query, options = {}) {
         phrase: alias.phrase,
         canonical: alias.canonical,
       });
+      matchedNormalizedPhrases.push(alias.normalizedPhrase);
     }
 
     for (const [normalizedTagName, canonicalTagName] of sortedTagEntries) {
       if (normalizedQuery.includes(normalizedTagName)) {
         addRequiredTag(canonicalTagName);
+        matchedNormalizedPhrases.push(normalizedTagName);
       }
     }
   }
@@ -245,13 +323,14 @@ function parseNaturalLanguageQuery(query, options = {}) {
     }
   }
 
-  const keywordHints = uniqueStrings(
-    (normalizedQuery.match(/[a-z0-9]{2,}/g) || [])
+  const keywordHints = uniqueStrings([
+    ...(normalizedQuery.match(/[a-z0-9]{2,}/g) || [])
       .map((token) => token.trim())
-      .filter((token) => token && !STOP_TOKENS.has(token))
-  );
+      .filter((token) => token && !STOP_TOKENS.has(token) && !SUPPLEMENTAL_STOP_TOKENS.has(token)),
+    ...extractKeywordHints(rawQuery, normalizedQuery, matchedNormalizedPhrases),
+  ]);
 
-  if (!requiredTags.length && rawQuery) {
+  if (!requiredTags.length && !keywordHints.length && rawQuery) {
     keywordHints.push(rawQuery);
   }
 
@@ -299,6 +378,7 @@ function scoreCandidateImage(image, parsedQuery) {
   const missingRequiredTags = [];
   const matchedImplicitTags = [];
   const matchedKeywordHints = [];
+  const missingKeywordHints = [];
   const matchedExcludedTags = [];
   let score = 0;
 
@@ -335,11 +415,15 @@ function scoreCandidateImage(image, parsedQuery) {
 
   for (const keyword of parsedQuery.keywordHints) {
     const normalizedKeyword = normalizeText(keyword);
-    if (!normalizedKeyword || !haystack.includes(normalizedKeyword)) {
+    if (!normalizedKeyword) {
+      continue;
+    }
+    if (!haystack.includes(normalizedKeyword)) {
+      missingKeywordHints.push(keyword);
       continue;
     }
     matchedKeywordHints.push(keyword);
-    score += 8;
+    score += 12;
   }
 
   for (const tagName of parsedQuery.excludedTags) {
@@ -362,9 +446,14 @@ function scoreCandidateImage(image, parsedQuery) {
     score += 24;
   }
 
+  if (parsedQuery.keywordHints.length && missingKeywordHints.length === 0) {
+    score += 14;
+  }
+
   const strictMatch = (
     parsedQuery.requiredTags.length > 0
     && missingRequiredTags.length === 0
+    && missingKeywordHints.length === 0
     && matchedExcludedTags.length === 0
   );
 
@@ -388,6 +477,12 @@ function scoreCandidateImage(image, parsedQuery) {
   if (matchedImplicitTags.length) {
     summary.push(`辅助条件: ${matchedImplicitTags.join(' / ')}`);
   }
+  if (matchedKeywordHints.length) {
+    summary.push(`Keywords: ${matchedKeywordHints.join(' / ')}`);
+  }
+  if (missingKeywordHints.length) {
+    summary.push(`Missing keywords: ${missingKeywordHints.join(' / ')}`);
+  }
   if (matchedExcludedTags.length) {
     summary.push(`排除原因: ${matchedExcludedTags.join(' / ')}`);
   }
@@ -401,6 +496,7 @@ function scoreCandidateImage(image, parsedQuery) {
       missingRequiredTags,
       matchedImplicitTags,
       matchedKeywordHints,
+      missingKeywordHints,
       matchedExcludedTags,
     },
     strictMatch,
@@ -471,6 +567,7 @@ function searchNaturalLanguageImages(libraryDb, options = {}) {
     images = (typeof libraryDb?.searchImages === 'function'
       ? libraryDb.searchImages({
         keyword: query,
+        terms: parsedQuery.keywordHints.length ? parsedQuery.keywordHints : candidateTerms,
         limit,
         offset: 0,
         status: options.status,
@@ -485,7 +582,8 @@ function searchNaturalLanguageImages(libraryDb, options = {}) {
         matchedRequiredTags: [],
         missingRequiredTags: [],
         matchedImplicitTags: [],
-        matchedKeywordHints: [query],
+        matchedKeywordHints: parsedQuery.keywordHints.length ? parsedQuery.keywordHints : [query],
+        missingKeywordHints: [],
         matchedExcludedTags: [],
       },
       strictMatch: false,

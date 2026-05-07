@@ -1232,24 +1232,37 @@ class LibraryDatabase {
 
   // 搜索图片（支持文件名、路径、标签）
   searchImages(options = {}) {
-    const { keyword, folder, folderPath, status, limit = 50, offset = 0 } = options;
+    const { keyword, terms = [], folder, folderPath, status, limit = 50, offset = 0 } = options;
     
     let whereClause = 'i.is_deleted = 0';
     const params = [];
 
-    if (keyword) {
-      whereClause += ` AND (
-        i.filename LIKE ?
-        OR i.path LIKE ?
-        OR EXISTS (
-          SELECT 1
-          FROM image_tags it2
-          JOIN tags t2 ON t2.id = it2.tag_id
-          WHERE it2.image_id = i.id
-            AND t2.name LIKE ?
-        )
-      )`;
-      params.push(`%${keyword}%`, `%${keyword}%`, `%${keyword}%`);
+    const searchTerms = Array.from(new Set(
+      (Array.isArray(terms) && terms.length ? terms : [keyword])
+        .map((term) => String(term || '').trim())
+        .filter(Boolean)
+    ));
+
+    if (searchTerms.length) {
+      const termClauses = [];
+      for (const term of searchTerms) {
+        const escapedTerm = `%${escapeLikePattern(term)}%`;
+        termClauses.push(`(
+          i.filename LIKE ? ESCAPE '\\'
+          OR i.path LIKE ? ESCAPE '\\'
+          OR i.relative_path LIKE ? ESCAPE '\\'
+          OR i.folder LIKE ? ESCAPE '\\'
+          OR EXISTS (
+            SELECT 1
+            FROM image_tags it2
+            JOIN tags t2 ON t2.id = it2.tag_id
+            WHERE it2.image_id = i.id
+              AND t2.name LIKE ? ESCAPE '\\'
+          )
+        )`);
+        params.push(escapedTerm, escapedTerm, escapedTerm, escapedTerm, escapedTerm);
+      }
+      whereClause += ` AND (${termClauses.join(' AND ')})`;
     }
 
     const effectiveFolder = folderPath || folder;
