@@ -1027,7 +1027,9 @@ function createWindow() {
 
   getLoggerInstance().info('主窗口已创建');
 
-  const htmlPath = path.join(__dirname, '../../frontend/build/index.html');
+  const htmlPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'frontend', 'build', 'index.html')
+    : path.join(__dirname, '../../frontend/build/index.html');
   getLoggerInstance().info('HTML 路径:', htmlPath);
   getLoggerInstance().info('HTML 文件存在:', fs.existsSync(htmlPath));
 
