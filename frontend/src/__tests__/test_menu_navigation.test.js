@@ -253,6 +253,9 @@ describe('menu navigation smoke', () => {
     await typeAndFlush(user, screen.getAllByRole('textbox')[0], '新疆');
     await clickAndFlush(user, screen.getByRole('button', { name: /找一张单人女生/i }));
 
+    expect(screen.getByPlaceholderText('例如：搜索春天的草原照片')).toBeInTheDocument();
+    expect(screen.queryByText('搜索关键词：西湖景区 路牌')).not.toBeInTheDocument();
+    expect(screen.queryByText('关键词 / 文件夹')).not.toBeInTheDocument();
     expect(window.electronAPI.naturalSearchImages).not.toHaveBeenCalled();
 
     await clickAndFlush(user, screen.getByRole('button', { name: /开始搜图/i }));

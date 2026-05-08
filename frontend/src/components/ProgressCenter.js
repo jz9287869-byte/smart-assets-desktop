@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   Clock,
@@ -173,24 +173,13 @@ export default function ProgressCenter() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const [libResult, queueResult, cloudResult] = await Promise.all([
+        const [libResult, queueResult] = await Promise.all([
           window.electronAPI?.libraryAPI?.getStatus?.(),
           window.electronAPI?.queueAPI?.getStats?.(),
-          window.electronAPI?.aiAPI?.getCloudReviewConfig?.(),
         ]);
 
         if (libResult?.success) setLibraryStatus(libResult);
         if (queueResult?.success) setStats(queueResult.stats);
-        if (cloudResult?.success) {
-          setCloudReviewConfig((prev) => ({
-            ...prev,
-            enabled: !!cloudResult.enabled,
-            provider: cloudResult.provider || 'openai_compatible',
-            baseURL: cloudResult.baseURL || '',
-            model: cloudResult.model || '',
-            hasApiKey: !!cloudResult.hasApiKey,
-          }));
-        }
       } catch (error) {
         console.error('Failed to fetch processing status:', error);
       }
@@ -205,6 +194,31 @@ export default function ProgressCenter() {
       if (cleanup && typeof cleanup === 'function') cleanup();
     };
   }, []);
+
+  const loadCloudReviewConfig = useCallback(async () => {
+    try {
+      const cloudResult = await window.electronAPI?.aiAPI?.getCloudReviewConfig?.();
+      if (!cloudResult?.success) {
+        return;
+      }
+      setCloudReviewConfig((prev) => ({
+        ...prev,
+        enabled: !!cloudResult.enabled,
+        provider: cloudResult.provider || 'openai_compatible',
+        baseURL: cloudResult.baseURL || '',
+        model: cloudResult.model || '',
+        apiKey: '',
+        hasApiKey: !!cloudResult.hasApiKey,
+      }));
+      setApiKeyTouched(false);
+    } catch (error) {
+      console.error('Failed to fetch cloud review config:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCloudReviewConfig();
+  }, [loadCloudReviewConfig]);
 
   const formatNumber = (num) => (num === undefined || num === null ? '-' : num.toLocaleString());
   const thumbnailTotals = getQueueTotals(stats?.thumbnail);
@@ -335,6 +349,7 @@ export default function ProgressCenter() {
         hasApiKey: !!result.hasApiKey,
       }));
       setApiKeyTouched(false);
+      await loadCloudReviewConfig();
       setCloudConfigNotice(
         result.enabled
           ? '云端复核配置已生效，后续 AI 标注会按新的模型设置执行。'

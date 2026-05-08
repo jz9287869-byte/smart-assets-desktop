@@ -1,6 +1,6 @@
 {
   "name": "smart-image-library",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Smart image asset manager",
   "main": "electron/main/main.js",
   "engines": {

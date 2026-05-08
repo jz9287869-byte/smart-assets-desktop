@@ -16,7 +16,6 @@ import { formatFileSize, getImageUrl, parseTags } from '../utils/imageUtils';
 const EXAMPLE_PROMPTS = [
   '找一张单人女生，新疆草原的照片',
   '搜索伊犁文件夹里的草原照片',
-  '搜索关键词：西湖景区 路牌',
   '想找纯风景的雪山照片',
 ];
 
@@ -72,7 +71,7 @@ function SearchResultCard({ image, onOpenInFolder, onCopyPath }) {
           </div>
         )}
         <div className="absolute left-3 top-3 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300">
-          匹配分 {Math.max(0, Math.round(Number(image?.natural_search_score || 0)))}
+          匹配度 {Math.max(0, Math.round(Number(image?.natural_search_score || 0)))}
         </div>
       </div>
 
@@ -258,12 +257,12 @@ export default function NaturalLanguageSearch({ showToast }) {
           <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950/60 p-5 shadow-2xl shadow-slate-950/10">
             <div className="mb-3 text-sm font-semibold text-slate-100">输入检索条件</div>
             <p className="mb-4 text-xs leading-5 text-slate-400">
-              可输入标签条件、文件夹名称、关键词，例如：搜索伊犁文件夹里的草原照片
+              文件夹目录名称用于限定搜索范围，下方检索条件主要用于描述标签和图片内容。
             </p>
 
             <label className="mb-3 block">
               <span className="mb-2 block text-xs font-semibold text-slate-200">
-                文件夹目录名称 <span className="text-red-300">*</span>
+                文件夹目录名称<span className="text-red-300">*</span>
               </span>
               <div className="relative">
                 <FolderOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
@@ -288,7 +287,7 @@ export default function NaturalLanguageSearch({ showToast }) {
                   setCurrentPage(1);
                 }}
                 rows={6}
-                placeholder="例如：搜索伊犁文件夹里的草原照片，或输入西湖景区 路牌"
+                placeholder="例如：搜索春天的草原照片"
                 className="min-h-[180px] w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-4 pl-11 pr-4 text-sm leading-6 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -300,7 +299,7 @@ export default function NaturalLanguageSearch({ showToast }) {
               className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-              {isSearching ? '搜索中' : '开始搜图'}
+              {isSearching ? '搜索中...' : '开始搜图'}
             </button>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -334,13 +333,6 @@ export default function NaturalLanguageSearch({ showToast }) {
             items={searchResult.intent?.implicitTags || []}
             accentClass="text-blue-300"
             emptyText="没有辅助条件"
-          />
-          <IntentSection
-            icon={Search}
-            title="关键词 / 文件夹"
-            items={searchResult.intent?.keywordHints || []}
-            accentClass="text-cyan-300"
-            emptyText="没有额外关键词"
           />
           <IntentSection
             icon={MapPin}
@@ -396,7 +388,7 @@ export default function NaturalLanguageSearch({ showToast }) {
               </div>
             ) : (
               <div className="text-xs text-slate-500">
-                右侧固定三列展示，优先看小图筛选
+                右侧按响应式网格展示，优先查看缩略图筛选结果。
               </div>
             )}
           </div>
