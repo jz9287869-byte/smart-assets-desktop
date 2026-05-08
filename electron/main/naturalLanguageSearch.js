@@ -368,9 +368,6 @@ function scoreCandidateImage(image, parsedQuery) {
   const normalizedTagSet = new Set(tags.map((tagName) => normalizeText(tagName)));
   const haystack = normalizeText([
     image?.filename,
-    image?.folder,
-    image?.relative_path,
-    image?.path,
     tags.join(' '),
   ].join(' '));
 
@@ -514,7 +511,9 @@ function compareSearchResult(a, b) {
 function buildNaturalLanguageSearchState(libraryDb, options = {}) {
   const query = String(options.query || '').trim();
   const limit = Math.max(1, Math.min(100, Number(options.limit) || 40));
-  const candidateLimit = Math.max(limit * 6, 120);
+  const offset = Math.max(0, Number(options.offset) || 0);
+  const folderName = String(options.folderName || '').trim();
+  const candidateLimit = Math.max((offset + limit) * 6, 120);
   const parsedQuery = parseNaturalLanguageQuery(query, {
     tagNames: typeof libraryDb?.getAllTagNames === 'function' ? libraryDb.getAllTagNames() : [],
   });
@@ -526,6 +525,7 @@ function buildNaturalLanguageSearchState(libraryDb, options = {}) {
       limit: candidateLimit,
       status: options.status,
       folderPath: options.folderPath,
+      folderName,
     })
     : [];
 
@@ -533,15 +533,34 @@ function buildNaturalLanguageSearchState(libraryDb, options = {}) {
     .map((image) => scoreCandidateImage(image, parsedQuery))
     .filter((image) => image.relaxedMatch || image.strictMatch)
     .sort(compareSearchResult);
+  const folderOnlyResults = !query && folderName
+    ? candidates.map((image) => ({
+      ...image,
+      natural_search_score: 1,
+      natural_search_summary: [`Folder: ${folderName}`],
+      natural_search_match: {
+        matchedRequiredTags: [],
+        missingRequiredTags: [],
+        matchedImplicitTags: [],
+        matchedKeywordHints: [],
+        missingKeywordHints: [],
+        matchedExcludedTags: [],
+      },
+      strictMatch: true,
+      relaxedMatch: true,
+    }))
+    : [];
 
   return {
     query,
     limit,
+    offset,
+    folderName,
     parsedQuery,
     candidateTerms,
     candidates,
     scoredCandidates,
-    strictResults: scoredCandidates.filter((image) => image.strictMatch),
+    strictResults: folderOnlyResults.length ? folderOnlyResults : scoredCandidates.filter((image) => image.strictMatch),
     relaxedResults: scoredCandidates.filter((image) => image.relaxedMatch),
   };
 }
@@ -550,6 +569,8 @@ function searchNaturalLanguageImages(libraryDb, options = {}) {
   const {
     query,
     limit,
+    offset,
+    folderName,
     parsedQuery,
     candidateTerms,
     candidates,
@@ -568,10 +589,12 @@ function searchNaturalLanguageImages(libraryDb, options = {}) {
       ? libraryDb.searchImages({
         keyword: query,
         terms: parsedQuery.keywordHints.length ? parsedQuery.keywordHints : candidateTerms,
-        limit,
+        limit: offset + limit,
         offset: 0,
         status: options.status,
         folderPath: options.folderPath,
+        folderName,
+        includeFolderInKeyword: false,
       })
       : []
     ).map((image) => ({
@@ -592,7 +615,7 @@ function searchNaturalLanguageImages(libraryDb, options = {}) {
   }
 
   return {
-    images: images.slice(0, limit),
+    images: images.slice(offset, offset + limit),
     intent: parsedQuery,
     candidateTerms,
     mode,

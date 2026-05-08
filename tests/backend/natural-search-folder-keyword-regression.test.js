@@ -12,7 +12,11 @@ function makeTempDir(prefix) {
 
 function tagImageWithNames(db, imageId, tagNames) {
   for (const tagName of tagNames) {
-    const tag = db.findTagByName(tagName);
+    let tag = db.findTagByName(tagName);
+    if (!tag?.id) {
+      const tagId = db.addTag('custom', tagName, null, null, 'ai');
+      tag = db.findTagByName(tagName) || { id: tagId };
+    }
     assert(tag?.id, `expected tag to exist: ${tagName}`);
     db.tagImage(imageId, tag.id, 1, 'ai');
   }
@@ -24,39 +28,53 @@ async function run() {
   await db.initialize();
 
   try {
+    const yiliFolderName = '\u4f0a\u7281';
+    const yiliRouteFolder = '\u4f0a\u7281\u8def\u7ebf';
+    const altayRouteFolder = '\u963f\u52d2\u6cf0\u8def\u7ebf';
+    const westlakeFolder = '\u897f\u6e56\u666f\u533a';
+    const signFolder = '\u8def\u724c\u533a';
+    const boatFolder = '\u6e38\u8239\u533a';
+    const femaleTag = '\u5973\u6027';
+    const soloTag = '\u5355\u4eba';
+    const grasslandTag = '\u8349\u539f';
+    const sceneryTag = '\u7eaf\u98ce\u666f';
+    const signTag = '\u8def\u724c';
+    const grasslandQuery = `\u627e\u4e00\u5f20${soloTag}${femaleTag}\uff0c${grasslandTag}\u7684\u7167\u7247`;
+    const signKeyword = '\u8def\u724c';
+
     const images = [
       {
         filename: 'yili-girl-grassland.jpg',
-        path: path.join(libraryPath, 'travel', '伊犁路线', 'yili-girl-grassland.jpg'),
-        folder: 'travel/伊犁路线',
-        relativePath: 'travel/伊犁路线/yili-girl-grassland.jpg',
+        path: path.join(libraryPath, 'travel', yiliRouteFolder, 'yili-girl-grassland.jpg'),
+        folder: `travel/${yiliRouteFolder}`,
+        relativePath: `travel/${yiliRouteFolder}/yili-girl-grassland.jpg`,
         size: 1024,
         format: '.jpg',
         autoAiTag: true,
       },
       {
         filename: 'altay-girl-grassland.jpg',
-        path: path.join(libraryPath, 'travel', '阿勒泰路线', 'altay-girl-grassland.jpg'),
-        folder: 'travel/阿勒泰路线',
-        relativePath: 'travel/阿勒泰路线/altay-girl-grassland.jpg',
+        path: path.join(libraryPath, 'travel', altayRouteFolder, 'altay-girl-grassland.jpg'),
+        folder: `travel/${altayRouteFolder}`,
+        relativePath: `travel/${altayRouteFolder}/altay-girl-grassland.jpg`,
         size: 1024,
         format: '.jpg',
         autoAiTag: true,
       },
       {
         filename: 'westlake-sign.jpg',
-        path: path.join(libraryPath, 'city', '西湖景区', '路牌区', 'westlake-sign.jpg'),
-        folder: 'city/西湖景区/路牌区',
-        relativePath: 'city/西湖景区/路牌区/westlake-sign.jpg',
+        path: path.join(libraryPath, 'city', westlakeFolder, signFolder, 'westlake-sign.jpg'),
+        folder: `city/${westlakeFolder}/${signFolder}`,
+        relativePath: `city/${westlakeFolder}/${signFolder}/westlake-sign.jpg`,
         size: 1024,
         format: '.jpg',
         autoAiTag: true,
       },
       {
         filename: 'westlake-boat.jpg',
-        path: path.join(libraryPath, 'city', '西湖景区', '游船区', 'westlake-boat.jpg'),
-        folder: 'city/西湖景区/游船区',
-        relativePath: 'city/西湖景区/游船区/westlake-boat.jpg',
+        path: path.join(libraryPath, 'city', westlakeFolder, boatFolder, 'westlake-boat.jpg'),
+        folder: `city/${westlakeFolder}/${boatFolder}`,
+        relativePath: `city/${westlakeFolder}/${boatFolder}/westlake-boat.jpg`,
         size: 1024,
         format: '.jpg',
         autoAiTag: true,
@@ -77,42 +95,34 @@ async function run() {
     `).all();
     const byFilename = new Map(rows.map((row) => [row.filename, row.id]));
 
-    tagImageWithNames(db, byFilename.get('yili-girl-grassland.jpg'), ['女性', '单人', '草原']);
-    tagImageWithNames(db, byFilename.get('altay-girl-grassland.jpg'), ['女性', '单人', '草原']);
-    tagImageWithNames(db, byFilename.get('westlake-sign.jpg'), ['纯风景']);
-    tagImageWithNames(db, byFilename.get('westlake-boat.jpg'), ['纯风景']);
+    tagImageWithNames(db, byFilename.get('yili-girl-grassland.jpg'), [femaleTag, soloTag, grasslandTag]);
+    tagImageWithNames(db, byFilename.get('altay-girl-grassland.jpg'), [femaleTag, soloTag, grasslandTag]);
+    tagImageWithNames(db, byFilename.get('westlake-sign.jpg'), [sceneryTag, signTag]);
+    tagImageWithNames(db, byFilename.get('westlake-boat.jpg'), [sceneryTag]);
 
     const folderScopedResult = searchNaturalLanguageImages(db, {
-      query: '找一张单人女生，伊犁文件夹里的草原照片',
+      query: grasslandQuery,
+      folderName: yiliFolderName,
       limit: 10,
     });
 
     assert.strictEqual(folderScopedResult.mode, 'strict');
-    assert(
-      folderScopedResult.intent.keywordHints.includes('伊犁'),
-      'structured query should preserve folder-name keyword hints'
-    );
     assert.deepStrictEqual(
       folderScopedResult.images.map((image) => image.filename),
       ['yili-girl-grassland.jpg'],
-      'folder name should act as an additional required condition in strict matching'
+      'folderName should scope strict matching independently from the search query'
     );
 
     const keywordResult = searchNaturalLanguageImages(db, {
-      query: '西湖景区 路牌',
+      query: signKeyword,
+      folderName: westlakeFolder,
       limit: 10,
     });
 
-    assert.strictEqual(keywordResult.mode, 'keyword');
-    assert.deepStrictEqual(
-      keywordResult.intent.keywordHints,
-      ['西湖景区', '路牌'],
-      'keyword-only query should split into usable keyword terms'
-    );
     assert.deepStrictEqual(
       keywordResult.images.map((image) => image.filename),
       ['westlake-sign.jpg'],
-      'keyword fallback should support matching folder names and multiple keywords together'
+      'folderName should scope tag matching without mixing folder terms into the query parser'
     );
   } finally {
     db.close();

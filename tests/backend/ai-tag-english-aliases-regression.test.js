@@ -42,12 +42,15 @@ async function run() {
 
     const worker = new ProcessingWorker(db, { aiTagConcurrency: 0, thumbnailConcurrency: 0 });
     const aliasCases = [
-      ['mountain', '山峰'],
-      ['rainbow', '彩虹'],
-      ['night sky', '夜空'],
-      ['silhouette', '剪影'],
-      ['stargazing', '观星'],
-      ['natural_phenomenon', '自然现象'],
+      ['mountain', '\u5c71\u5cf0'],
+      ['rainbow', '\u5f69\u8679'],
+      ['night sky', '\u591c\u7a7a'],
+      ['silhouette', '\u526a\u5f71'],
+      ['stargazing', '\u89c2\u661f'],
+      ['natural_phenomenon', '\u81ea\u7136\u73b0\u8c61'],
+      ['sunrise', '\u65e5\u51fa'],
+      ['landscape', '\u7eaf\u98ce\u666f'],
+      ['morning', '\u65e9\u6668'],
     ];
 
     for (const [input, expected] of aliasCases) {
@@ -75,9 +78,32 @@ async function run() {
 
     assert.deepStrictEqual(
       persisted,
-      ['彩虹'],
+      ['\u5f69\u8679'],
       'persisted AI tags should use normalized Chinese aliases instead of raw English labels'
     );
+
+    const legacyTagId = db.addTag('scene', 'sunrise', null, null, 'ai');
+    db.tagImage(image.id, legacyTagId, 0.88, 'ai');
+
+    const migrateResult = db.normalizeAliasedTags();
+    assert(migrateResult.renamed + migrateResult.merged >= 1, 'legacy English AI tags should be normalized during migration');
+
+    const namesAfterMigration = db.db.prepare(`
+      SELECT t.name
+      FROM image_tags it
+      JOIN tags t ON t.id = it.tag_id
+      WHERE it.image_id = ?
+      ORDER BY t.name ASC
+    `).all(image.id).map((row) => row.name);
+
+    assert.deepStrictEqual(
+      namesAfterMigration,
+      ['\u5f69\u8679', '\u65e5\u51fa'],
+      'legacy English tags should be merged into their Chinese canonical names'
+    );
+
+    const legacyEnglishTag = db.findTagByName('sunrise', { preferNonCustom: false });
+    assert(!legacyEnglishTag, 'legacy English alias rows should be removed after migration');
   } finally {
     db.close();
   }

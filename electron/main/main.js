@@ -1730,6 +1730,7 @@ async function executeNaturalLanguageSearch(payload = {}) {
   const {
     query,
     limit,
+    offset,
     parsedQuery,
     candidates,
     strictResults,
@@ -1780,10 +1781,12 @@ async function executeNaturalLanguageSearch(payload = {}) {
     usedKeywordFallback = true;
     selectedResults = currentLibrary.searchImages({
       keyword: query,
-      limit,
+      limit: offset + limit,
       offset: 0,
       status: payload.status,
       folderPath: payload.folderPath,
+      folderName: payload.folderName,
+      includeFolderInKeyword: false,
     }).map((image) => ({
       ...image,
       natural_search_score: 1,
@@ -1803,7 +1806,7 @@ async function executeNaturalLanguageSearch(payload = {}) {
   }
 
   return {
-    images: selectedResults.slice(0, limit),
+    images: selectedResults.slice(offset, offset + limit),
     intent: parsedQuery,
     mode,
     usedKeywordFallback,
