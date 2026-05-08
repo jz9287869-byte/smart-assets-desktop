@@ -2,6 +2,7 @@
 const osPath = require('path');
 const fs = require('fs');
 const { BUILTIN_TAG_DEFINITIONS } = require('./tagDefinitions');
+const { normalizeAITagName } = require('./aiTagAliases');
 let electronApp = null;
 try {
   const electron = require('electron');
@@ -113,6 +114,7 @@ class LibraryDatabase {
         this.createTables();
         this.migrateSchema();
         this.ensureBuiltinTags();
+        this.normalizeAliasedTags();
         console.log(`资源库初始化完成: ${this.libraryId}`);
         resolve();
       } catch (error) {
@@ -834,6 +836,115 @@ class LibraryDatabase {
     `).get(trimmedName, preferNonCustom ? 1 : 0);
   }
 
+  normalizeAliasedTags() {
+    const rows = this.db.prepare(`
+      SELECT id, category_id, name, color, created_source
+      FROM tags
+      ORDER BY id ASC
+    `).all();
+
+    if (rows.length === 0) {
+      return { renamed: 0, merged: 0 };
+    }
+
+    const selectLinksByTagId = this.db.prepare(`
+      SELECT image_id, confidence, source, ai_model, created_at
+      FROM image_tags
+      WHERE tag_id = ?
+      ORDER BY id ASC
+    `);
+    const selectDuplicateLink = this.db.prepare(`
+      SELECT id, confidence
+      FROM image_tags
+      WHERE image_id = ? AND tag_id = ? AND source = ?
+      LIMIT 1
+    `);
+    const insertMergedLink = this.db.prepare(`
+      INSERT INTO image_tags (image_id, tag_id, confidence, source, ai_model, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const updateMergedLink = this.db.prepare(`
+      UPDATE image_tags
+      SET confidence = MAX(confidence, ?),
+          ai_model = COALESCE(ai_model, ?)
+      WHERE id = ?
+    `);
+    const deleteLinksByTagId = this.db.prepare(`
+      DELETE FROM image_tags
+      WHERE tag_id = ?
+    `);
+    const renameTagStmt = this.db.prepare(`
+      UPDATE tags
+      SET name = ?
+      WHERE id = ?
+    `);
+    const deleteTagStmt = this.db.prepare(`
+      DELETE FROM tags
+      WHERE id = ?
+    `);
+    const findCanonicalTagStmt = this.db.prepare(`
+      SELECT id, category_id, created_source
+      FROM tags
+      WHERE name = ?
+      ORDER BY
+        CASE WHEN category_id = 'custom' THEN 1 ELSE 0 END ASC,
+        usage_count DESC,
+        id ASC
+      LIMIT 1
+    `);
+    const refreshUsageCountsStmt = this.db.prepare(`
+      UPDATE tags
+      SET usage_count = (
+        SELECT COUNT(*)
+        FROM image_tags
+        WHERE image_tags.tag_id = tags.id
+      )
+    `);
+
+    const result = { renamed: 0, merged: 0 };
+
+    this.db.transaction(() => {
+      for (const row of rows) {
+        const canonicalName = normalizeAITagName(row.name);
+        if (!canonicalName || canonicalName === row.name) {
+          continue;
+        }
+
+        const target = findCanonicalTagStmt.get(canonicalName);
+        if (!target || Number(target.id) === Number(row.id)) {
+          renameTagStmt.run(canonicalName, row.id);
+          result.renamed += 1;
+          continue;
+        }
+
+        const links = selectLinksByTagId.all(row.id);
+        for (const link of links) {
+          const duplicate = selectDuplicateLink.get(link.image_id, target.id, link.source);
+          if (duplicate) {
+            updateMergedLink.run(link.confidence, link.ai_model || null, duplicate.id);
+          } else {
+            insertMergedLink.run(
+              link.image_id,
+              target.id,
+              link.confidence,
+              link.source,
+              link.ai_model || null,
+              link.created_at || null
+            );
+          }
+        }
+
+        deleteLinksByTagId.run(row.id);
+        deleteTagStmt.run(row.id);
+        result.merged += 1;
+      }
+
+      refreshUsageCountsStmt.run();
+    })();
+
+    return result;
+  }
+
   // 删除标签
   deleteTag(tagId) {
     const tag = this.db.prepare(`
@@ -1096,6 +1207,7 @@ class LibraryDatabase {
       terms = [],
       folder,
       folderPath,
+      folderName,
       status,
       limit = 240,
     } = options;
@@ -1111,6 +1223,12 @@ class LibraryDatabase {
         `${effectiveFolder}/%`,
         `${effectiveFolder}\\%`
       );
+    }
+
+    const normalizedFolderName = String(folderName || '').trim();
+    if (normalizedFolderName) {
+      whereClause += ` AND i.folder LIKE ? ESCAPE '\\'`;
+      params.push(`%${escapeLikePattern(normalizedFolderName)}%`);
     }
 
     if (status) {
@@ -1130,8 +1248,6 @@ class LibraryDatabase {
         const escapedTerm = `%${escapeLikePattern(term)}%`;
         termClauses.push(`(
           i.filename LIKE ? ESCAPE '\\'
-          OR i.path LIKE ? ESCAPE '\\'
-          OR i.folder LIKE ? ESCAPE '\\'
           OR EXISTS (
             SELECT 1
             FROM image_tags it2
@@ -1140,7 +1256,7 @@ class LibraryDatabase {
               AND t2.name LIKE ? ESCAPE '\\'
           )
         )`);
-        params.push(escapedTerm, escapedTerm, escapedTerm, escapedTerm);
+        params.push(escapedTerm, escapedTerm);
       }
       whereClause += ` AND (${termClauses.join(' OR ')})`;
     }
@@ -1253,7 +1369,17 @@ class LibraryDatabase {
 
   // 搜索图片（支持文件名、路径、标签）
   searchImages(options = {}) {
-    const { keyword, terms = [], folder, folderPath, status, limit = 50, offset = 0 } = options;
+    const {
+      keyword,
+      terms = [],
+      folder,
+      folderPath,
+      folderName,
+      status,
+      limit = 50,
+      offset = 0,
+      includeFolderInKeyword = true,
+    } = options;
     
     let whereClause = 'i.is_deleted = 0';
     const params = [];
@@ -1268,20 +1394,29 @@ class LibraryDatabase {
       const termClauses = [];
       for (const term of searchTerms) {
         const escapedTerm = `%${escapeLikePattern(term)}%`;
-        termClauses.push(`(
-          i.filename LIKE ? ESCAPE '\\'
-          OR i.path LIKE ? ESCAPE '\\'
-          OR i.relative_path LIKE ? ESCAPE '\\'
-          OR i.folder LIKE ? ESCAPE '\\'
-          OR EXISTS (
+        const clauses = [
+          `i.filename LIKE ? ESCAPE '\\'`,
+          `EXISTS (
             SELECT 1
             FROM image_tags it2
             JOIN tags t2 ON t2.id = it2.tag_id
             WHERE it2.image_id = i.id
               AND t2.name LIKE ? ESCAPE '\\'
-          )
-        )`);
-        params.push(escapedTerm, escapedTerm, escapedTerm, escapedTerm, escapedTerm);
+          )`,
+        ];
+        const termParams = [escapedTerm, escapedTerm];
+
+        if (includeFolderInKeyword) {
+          clauses.splice(1, 0,
+            `i.path LIKE ? ESCAPE '\\'`,
+            `i.relative_path LIKE ? ESCAPE '\\'`,
+            `i.folder LIKE ? ESCAPE '\\'`
+          );
+          termParams.splice(1, 0, escapedTerm, escapedTerm, escapedTerm);
+        }
+
+        termClauses.push(`(${clauses.join(' OR ')})`);
+        params.push(...termParams);
       }
       whereClause += ` AND (${termClauses.join(' AND ')})`;
     }
@@ -1294,6 +1429,12 @@ class LibraryDatabase {
         `${effectiveFolder}/%`,
         `${effectiveFolder}\\%`
       );
+    }
+
+    const normalizedFolderName = String(folderName || '').trim();
+    if (normalizedFolderName) {
+      whereClause += ` AND i.folder LIKE ? ESCAPE '\\'`;
+      params.push(`%${escapeLikePattern(normalizedFolderName)}%`);
     }
 
     if (status) {

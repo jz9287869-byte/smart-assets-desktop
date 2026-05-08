@@ -6,94 +6,11 @@ const { PythonEngineManager } = require('./pythonEngineManager');
 const XenovaAIEngine = require('./xenovaAIEngine');
 const { DeepSeekReviewService } = require('./deepseekReviewService');
 const { BUILTIN_TAG_DEFINITIONS } = require('./tagDefinitions');
+const { normalizeAITagName } = require('./aiTagAliases');
 const { resolveModelsRoot } = require('./modelPaths');
 const fs = require('fs');
 
 const SHARED_AI_TAG_LOOKUP = new Map(BUILTIN_TAG_DEFINITIONS.map((item) => [item.name, item]));
-const RAW_AI_TAG_ALIASES = [
-  ['hot air balloon', '\u70ed\u6c14\u7403'],
-  ['air balloon', '\u70ed\u6c14\u7403'],
-  ['balloon', '\u70ed\u6c14\u7403'],
-  ['ballooning', '\u70ed\u6c14\u7403'],
-  ['portrait', '\u4eba\u7269'],
-  ['person', '\u4eba\u7269'],
-  ['people', '\u4eba\u7269'],
-  ['human', '\u4eba\u7269'],
-  ['group photo', '\u5408\u7167'],
-  ['group', '\u5408\u7167'],
-  ['camera', '\u76f8\u673a'],
-  ['drone', '\u65e0\u4eba\u673a'],
-  ['car', '\u6c7d\u8f66'],
-  ['bus', '\u5df4\u58eb'],
-  ['train', '\u706b\u8f66'],
-  ['airplane', '\u98de\u673a'],
-  ['plane', '\u98de\u673a'],
-  ['bicycle', '\u81ea\u884c\u8f66'],
-  ['bike', '\u81ea\u884c\u8f66'],
-  ['motorcycle', '\u6469\u6258\u8f66'],
-  ['wedding', '\u5a5a\u793c'],
-  ['festival', '\u8282\u5e86'],
-  ['performance', '\u6f14\u51fa'],
-  ['concert', '\u6f14\u51fa'],
-  ['sports', '\u8fd0\u52a8'],
-  ['sport', '\u8fd0\u52a8'],
-  ['mountain', '山峰'],
-  ['mountains', '山峰'],
-  ['rainbow', '彩虹'],
-  ['night sky', '夜空'],
-  ['starry sky', '星空'],
-  ['stargazing', '观星'],
-  ['silhouette', '剪影'],
-  ['natural phenomenon', '自然现象'],
-  ['natural_phenomenon', '自然现象'],
-  ['hiking', '\u5f92\u6b65'],
-  ['camping', '\u9732\u8425'],
-  ['cycling', '\u9a91\u884c'],
-  ['bear', '\u718a'],
-  ['brown bear', '\u68d5\u718a'],
-  ['tiger', '\u8001\u864e'],
-  ['tiananmen', '天安门'],
-  ['tiananmen square', '天安门'],
-  ['gate of heavenly peace', '天安门'],
-  ['天安门广场', '天安门'],
-  ['天安门城楼', '天安门'],
-  ['故宫博物院', '故宫'],
-  ['紫禁城', '故宫'],
-  ['the forbidden city', '故宫'],
-  ['forbidden city', '故宫'],
-  ['the bund', '外滩'],
-  ['waitan', '外滩'],
-  ['shanghai bund', '外滩'],
-  ['oriental pearl', '东方明珠'],
-  ['oriental pearl tower', '东方明珠'],
-  ['bundadalar palace', '布达拉宫'],
-  ['potala palace', '布达拉宫'],
-  ['布达拉宫广场', '布达拉宫'],
-  ['hongyadong', '洪崖洞'],
-  ['hongya cave', '洪崖洞'],
-  ['west lake', '西湖'],
-  ['xihu', '西湖'],
-  ['滇池风景区', '滇池'],
-  ['dianchi lake', '滇池'],
-  ['dianchi', '滇池'],
-  ['jokhang temple', '大昭寺'],
-  ['大昭寺广场', '大昭寺'],
-];
-
-function normalizeAliasKey(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[`'"“”‘’]/g, '')
-    .replace(/[()（）[\]【】{}]/g, '')
-    .replace(/[.,!?;:，。！？；：/\\|_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-const AI_TAG_ALIASES = new Map(
-  RAW_AI_TAG_ALIASES.map(([alias, canonical]) => [normalizeAliasKey(alias), canonical])
-);
 
 const AI_SAVE_THRESHOLDS = {
   scene: 0.18,
@@ -1591,11 +1508,7 @@ class ProcessingWorker extends EventEmitter {
     return keywords.slice(0, 6);
   }
   normalizeTagName(name) {
-    if (typeof name !== 'string') return '';
-    const trimmed = name.trim();
-    if (!trimmed) return '';
-    const aliased = AI_TAG_ALIASES.get(normalizeAliasKey(trimmed));
-    return aliased || trimmed;
+    return normalizeAITagName(name);
   }
 
   isColorTag(tag) {

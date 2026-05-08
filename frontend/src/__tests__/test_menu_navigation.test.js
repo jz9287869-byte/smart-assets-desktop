@@ -32,6 +32,13 @@ async function clickAndFlush(user, element) {
   await flush();
 }
 
+async function typeAndFlush(user, element, value) {
+  await act(async () => {
+    await user.type(element, value);
+  });
+  await flush();
+}
+
 function createElectronApi() {
   return {
     libraryAPI: {
@@ -243,6 +250,7 @@ describe('menu navigation smoke', () => {
     const scope = within(sidebar);
 
     await clickAndFlush(user, scope.getByRole('button', { name: /自然语言搜图/i }));
+    await typeAndFlush(user, screen.getAllByRole('textbox')[0], '新疆');
     await clickAndFlush(user, screen.getByRole('button', { name: /找一张单人女生/i }));
 
     expect(window.electronAPI.naturalSearchImages).not.toHaveBeenCalled();
@@ -251,6 +259,9 @@ describe('menu navigation smoke', () => {
 
     expect(window.electronAPI.naturalSearchImages).toHaveBeenCalledWith(expect.objectContaining({
       query: expect.stringContaining('单人女生'),
+      folderName: '新疆',
+      limit: 24,
+      offset: 0,
     }));
     expect(await screen.findByText(/grassland-girl\.jpg/i)).toBeInTheDocument();
     expect(screen.getByText(/命中条件/i)).toBeInTheDocument();

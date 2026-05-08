@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  ChevronLeft,
+  ChevronRight,
   Copy,
   FolderOpen,
   Loader2,
@@ -22,6 +24,8 @@ const MODE_LABELS = {
   strict: '严格匹配',
   keyword: '关键词回退',
 };
+
+const PAGE_SIZE = 24;
 
 function IntentSection({ icon: Icon, title, items = [], accentClass, emptyText }) {
   return (
@@ -131,6 +135,8 @@ function SearchResultCard({ image, onOpenInFolder, onCopyPath }) {
 
 export default function NaturalLanguageSearch({ showToast }) {
   const [query, setQuery] = useState('');
+  const [folderName, setFolderName] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [hasSearched, setHasSearched] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResult, setSearchResult] = useState({
@@ -143,20 +149,26 @@ export default function NaturalLanguageSearch({ showToast }) {
     vectorCoverage: { available: 0, total: 0, computed: 0 },
   });
 
-  const executeSearch = useCallback(async () => {
+  const executeSearch = useCallback(async (page = 1) => {
     const trimmedQuery = String(query || '').trim();
-    if (!trimmedQuery) {
-      showToast?.('请输入自然语言检索条件');
+    const trimmedFolderName = String(folderName || '').trim();
+    const nextPage = Math.max(1, Number(page) || 1);
+
+    if (!trimmedFolderName) {
+      showToast?.('请输入文件夹目录名称，例如：伊犁');
       return;
     }
 
     setHasSearched(true);
     setIsSearching(true);
+    setCurrentPage(nextPage);
 
     try {
       const result = await window.electronAPI?.naturalSearchImages?.({
         query: trimmedQuery,
-        limit: 36,
+        folderName: trimmedFolderName,
+        limit: PAGE_SIZE,
+        offset: (nextPage - 1) * PAGE_SIZE,
       });
 
       if (!result?.success) {
@@ -187,7 +199,7 @@ export default function NaturalLanguageSearch({ showToast }) {
     } finally {
       setIsSearching(false);
     }
-  }, [query, showToast]);
+  }, [folderName, query, showToast]);
 
   const handleExampleFill = useCallback((example) => {
     setQuery(example);
@@ -217,6 +229,16 @@ export default function NaturalLanguageSearch({ showToast }) {
   }, [showToast]);
 
   const resultModeLabel = MODE_LABELS[searchResult.mode] || MODE_LABELS.strict;
+  const totalPages = Math.max(1, Math.ceil(Number(searchResult.total || 0) / PAGE_SIZE));
+  const canGoPrev = currentPage > 1 && !isSearching;
+  const canGoNext = currentPage < totalPages && !isSearching;
+
+  const goToPage = useCallback((page) => {
+    if (page < 1 || page > totalPages || page === currentPage || isSearching) {
+      return;
+    }
+    executeSearch(page);
+  }, [currentPage, executeSearch, isSearching, totalPages]);
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto px-6 py-5">
@@ -239,11 +261,32 @@ export default function NaturalLanguageSearch({ showToast }) {
               可输入标签条件、文件夹名称、关键词，例如：搜索伊犁文件夹里的草原照片
             </p>
 
+            <label className="mb-3 block">
+              <span className="mb-2 block text-xs font-semibold text-slate-200">
+                文件夹目录名称 <span className="text-red-300">*</span>
+              </span>
+              <div className="relative">
+                <FolderOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <input
+                  value={folderName}
+                  onChange={(event) => {
+                    setFolderName(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="例如：伊犁"
+                  className="w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-3 pl-11 pr-4 text-sm text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </label>
+
             <div className="relative">
               <Search className="absolute left-4 top-4 text-slate-500" size={18} />
               <textarea
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setCurrentPage(1);
+                }}
                 rows={6}
                 placeholder="例如：搜索伊犁文件夹里的草原照片，或输入西湖景区 路牌"
                 className="min-h-[180px] w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-4 pl-11 pr-4 text-sm leading-6 text-slate-100 placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
@@ -252,7 +295,7 @@ export default function NaturalLanguageSearch({ showToast }) {
 
             <button
               type="button"
-              onClick={executeSearch}
+              onClick={() => executeSearch(1)}
               disabled={isSearching}
               className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -322,7 +365,7 @@ export default function NaturalLanguageSearch({ showToast }) {
               <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-300">
                 {resultModeLabel}
               </span>
-              <span>返回 {searchResult.images.length} 张图片</span>
+              <span>第 {currentPage}/{totalPages} 页，返回 {searchResult.images.length} 张 / 共 {searchResult.total} 张</span>
               <span>候选集 {searchResult.candidateCount}</span>
               {searchResult.vectorSearchApplied && (
                 <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-300">
@@ -330,9 +373,32 @@ export default function NaturalLanguageSearch({ showToast }) {
                 </span>
               )}
             </div>
-            <div className="text-xs text-slate-500">
-              右侧固定三列展示，优先看小图筛选
-            </div>
+            {hasSearched && searchResult.total > PAGE_SIZE ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={!canGoPrev}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 transition-colors hover:border-blue-500/40 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="上一页"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={!canGoNext}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-900 text-slate-300 transition-colors hover:border-blue-500/40 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="下一页"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="text-xs text-slate-500">
+                右侧固定三列展示，优先看小图筛选
+              </div>
+            )}
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
@@ -358,16 +424,43 @@ export default function NaturalLanguageSearch({ showToast }) {
                 </p>
               </div>
             ) : (
-              <div className="grid gap-4 pb-2 md:grid-cols-2 xl:grid-cols-3">
-                {searchResult.images.map((image) => (
-                  <SearchResultCard
-                    key={image.id}
-                    image={image}
-                    onOpenInFolder={handleOpenInFolder}
-                    onCopyPath={handleCopyPath}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid gap-4 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                  {searchResult.images.map((image) => (
+                    <SearchResultCard
+                      key={image.id}
+                      image={image}
+                      onOpenInFolder={handleOpenInFolder}
+                      onCopyPath={handleCopyPath}
+                    />
+                  ))}
+                </div>
+                {searchResult.total > PAGE_SIZE ? (
+                  <div className="sticky bottom-0 mt-4 flex items-center justify-center gap-3 border-t border-slate-800 bg-slate-900/95 py-3">
+                    <button
+                      type="button"
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={!canGoPrev}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200 transition-colors hover:border-blue-500/40 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <ChevronLeft size={14} />
+                      上一页
+                    </button>
+                    <span className="text-xs text-slate-400">
+                      第 {currentPage} / {totalPages} 页
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={!canGoNext}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-medium text-slate-200 transition-colors hover:border-blue-500/40 hover:text-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      下一页
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                ) : null}
+              </>
             )}
           </div>
         </div>
