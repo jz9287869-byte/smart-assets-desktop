@@ -676,7 +676,11 @@ class ProcessingWorker extends EventEmitter {
       ? this.db.getImageVectors(imageIds)
       : [];
     const vectorMap = new Map(existingRows.map((row) => [row.image_id, row.vector]));
-    const maxToCompute = Math.max(0, Math.min(32, Number(options.maxToCompute) || 16));
+    const hasExplicitMaxToCompute = Object.prototype.hasOwnProperty.call(options, 'maxToCompute');
+    const requestedMaxToCompute = hasExplicitMaxToCompute ? Number(options.maxToCompute) : 16;
+    const maxToCompute = Number.isFinite(requestedMaxToCompute)
+      ? Math.max(0, Math.min(32, requestedMaxToCompute))
+      : 16;
 
     const missingImages = normalizedImages
       .filter((image) => !vectorMap.has(Number(image?.id)))
@@ -744,7 +748,9 @@ class ProcessingWorker extends EventEmitter {
 
     if (textVector) {
       vectorState = await this.ensureImageVectors(normalizedImages, {
-        maxToCompute: options.maxToCompute || 16,
+        maxToCompute: Object.prototype.hasOwnProperty.call(options, 'maxToCompute')
+          ? options.maxToCompute
+          : 16,
       });
       vectorMap = vectorState.vectors || new Map();
     }
@@ -796,10 +802,16 @@ class ProcessingWorker extends EventEmitter {
       })
       .map(({ _stable_index, ...image }) => image);
 
-    const cloudRerank = await this.applyCloudQueryRerank(rerankedImages, parsedIntent, {
-      query: queryText,
-      maxImages: options.maxCloudRerank || 8,
-    });
+    const cloudRerank = options.skipCloudRerank
+      ? {
+          images: rerankedImages,
+          cloudRerankApplied: false,
+          cloudRerankCoverage: { scored: 0, total: normalizedImages.length },
+        }
+      : await this.applyCloudQueryRerank(rerankedImages, parsedIntent, {
+          query: queryText,
+          maxImages: options.maxCloudRerank || 8,
+        });
 
     return {
       images: cloudRerank.images || rerankedImages,

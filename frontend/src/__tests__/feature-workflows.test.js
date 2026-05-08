@@ -98,6 +98,10 @@ function createElectronApi(overrides = {}) {
         success: true,
         images: [],
       }),
+      getUntaggedIds: jest.fn().mockResolvedValue({
+        success: true,
+        ids: [],
+      }),
       ...overrides.imagesAPI,
     },
     searchImages: jest.fn().mockResolvedValue({
@@ -322,6 +326,33 @@ describe('Feature workflows', () => {
     await waitFor(() => {
       expect(screen.getByText(/当前选中 1 张图片/i)).toBeInTheDocument();
       expect(screen.getByText(/new\.jpg/i)).toBeInTheDocument();
+    });
+  });
+
+  test('batch tagging can select untagged images across all pages', async () => {
+    const api = createElectronApi({
+      imagesAPI: {
+        getUntagged: jest.fn().mockResolvedValue({
+          success: true,
+          images: [{ id: 12, filename: 'page-one.jpg', size: 256, path: 'D:\\page-one.jpg' }],
+        }),
+        getUntaggedIds: jest.fn().mockResolvedValue({
+          success: true,
+          ids: [12, 13, 14],
+        }),
+      },
+    });
+    window.electronAPI = api;
+    const user = userEvent.setup();
+
+    await renderAndFlush(<BatchTaggingTool showToast={jest.fn()} storageScope="default" />);
+
+    await clickAndFlush(user, screen.getByRole('button', { name: /全选所有页/i }));
+
+    await waitFor(() => {
+      expect(api.imagesAPI.getUntaggedIds).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(/当前选中 3 张图片/i)).toBeInTheDocument();
+      expect(screen.getByText(/应用到 3 张图片/i)).toBeInTheDocument();
     });
   });
 

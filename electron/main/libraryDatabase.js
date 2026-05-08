@@ -779,6 +779,27 @@ class LibraryDatabase {
     `).all(limit, offset);
   }
 
+  getUntaggedImageIds() {
+    return this.db.prepare(`
+      SELECT i.id FROM images i
+      LEFT JOIN image_tags it ON i.id = it.image_id
+      WHERE i.is_deleted = 0
+        AND i.process_status NOT IN ('auto_tagged', 'manual_tagged')
+        AND it.id IS NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM processing_queue pq
+          WHERE pq.image_id = i.id
+            AND (
+              pq.task_type IN ('aiTag', 'ai_tag')
+              OR (pq.task_type = 'thumbnail' AND COALESCE(i.auto_ai_tag, 0) = 1)
+            )
+            AND pq.status IN ('pending', 'processing')
+        )
+      ORDER BY i.imported_at DESC
+    `).all().map((row) => row.id);
+  }
+
   // 添加标签
   addTag(categoryId, name, parentId = null, color = null, createdSource = 'system') {
     try {
