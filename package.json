@@ -1,6 +1,6 @@
 {
   "name": "smart-image-library",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Smart image asset manager",
   "main": "electron/main/main.js",
   "engines": {
@@ -53,13 +53,19 @@
     "files": [
       "electron/main/**/*",
       "electron/preload/**/*",
-      "frontend/build/**/*",
       "node_modules/**/*",
       "python-backend/**/*",
       "requirements.txt",
       "setup-local-ai.cmd"
     ],
     "extraResources": [
+      {
+        "from": "frontend/build",
+        "to": "frontend/build",
+        "filter": [
+          "**/*"
+        ]
+      },
       {
         "from": ".models",
         "to": "models",
