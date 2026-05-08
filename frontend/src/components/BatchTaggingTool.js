@@ -28,6 +28,8 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
   const [tagInput, setTagInput] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
+  const [allUntaggedIds, setAllUntaggedIds] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [recentAiQueuedCount, setRecentAiQueuedCount] = useState(0);
   const [showUntaggedPool, setShowUntaggedPool] = useState(false);
@@ -146,25 +148,27 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
     return dedupeImages([...queuedImages, ...images]);
   }, [images, queuedImages, showUntaggedPool]);
 
-  const selectedImages = useMemo(
-    () => displayImages.filter((image) => selectedIds.includes(image.id)),
-    [displayImages, selectedIds]
-  );
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const allDisplayedSelected = displayImages.length > 0
+    && displayImages.every((image) => selectedIdSet.has(image.id));
+  const allPagesSelected = allUntaggedIds.length > 0
+    && allUntaggedIds.every((id) => selectedIdSet.has(id));
 
   useEffect(() => {
     const displayIds = new Set(displayImages.map((image) => image.id));
+    const allUntaggedIdSet = new Set(allUntaggedIds);
     const queuedIds = queuedImages
       .map((image) => image.id)
       .filter((id) => displayIds.has(id));
 
     setSelectedIds((prev) => {
-      const validSelectedIds = prev.filter((id) => displayIds.has(id));
+      const validSelectedIds = prev.filter((id) => displayIds.has(id) || allUntaggedIdSet.has(id));
       if (validSelectedIds.length === 0 && queuedIds.length > 0) {
         return areIdArraysEqual(prev, queuedIds) ? prev : queuedIds;
       }
       return areIdArraysEqual(prev, validSelectedIds) ? prev : validSelectedIds;
     });
-  }, [displayImages, queuedImages]);
+  }, [displayImages, queuedImages, allUntaggedIds]);
 
   useEffect(() => {
     if (!recentAiQueuedCount) return undefined;
@@ -190,9 +194,53 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
 
   const clearSelection = () => {
     setSelectedIds([]);
+    setAllUntaggedIds([]);
     setQueuedImages([]);
     persistQueue([]);
     setRecentAiQueuedCount(0);
+  };
+
+  const toggleCurrentPageSelection = () => {
+    const pageIds = displayImages.map((image) => image.id);
+    if (!pageIds.length) return;
+
+    setSelectedIds((prev) => {
+      const prevSet = new Set(prev);
+      const shouldDeselect = pageIds.every((id) => prevSet.has(id));
+      if (shouldDeselect) {
+        return prev.filter((id) => !pageIds.includes(id));
+      }
+      pageIds.forEach((id) => prevSet.add(id));
+      return Array.from(prevSet);
+    });
+  };
+
+  const toggleAllPagesSelection = async () => {
+    if (allPagesSelected) {
+      setSelectedIds([]);
+      setAllUntaggedIds([]);
+      return;
+    }
+
+    setIsSelectingAll(true);
+    try {
+      const result = await window.electronAPI?.imagesAPI?.getUntaggedIds?.();
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to load all untagged image ids');
+      }
+
+      const ids = Array.isArray(result.ids)
+        ? result.ids.filter((id) => Number.isInteger(Number(id))).map((id) => Number(id))
+        : [];
+      setAllUntaggedIds(ids);
+      setSelectedIds(ids);
+      showToast?.(`已全选所有页面：${ids.length} 张图片`);
+    } catch (error) {
+      console.error('Failed to select all untagged images:', error);
+      showToast?.(`全选所有页面失败：${error.message || '未知错误'}`);
+    } finally {
+      setIsSelectingAll(false);
+    }
   };
 
   const pushTag = (tagName) => {
@@ -260,6 +308,7 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
       setQueuedImages(remainingQueued);
       persistQueue(remainingQueued);
       setSelectedIds([]);
+      setAllUntaggedIds([]);
       setImages((prev) => prev.filter((image) => !processedIds.includes(image.id)));
       setRecentAiQueuedCount(result.totalQueued || processedIds.length);
       await loadImages({ silent: true });
@@ -292,6 +341,7 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
       setImages((prev) => prev.filter((image) => !processedIds.includes(image.id)));
       setTagsToAdd([]);
       setSelectedIds([]);
+      setAllUntaggedIds([]);
       await loadImages({ silent: true });
       showToast?.(`已为 ${processedIds.length} 张图片应用 ${tagsToAdd.length} 个标签`);
     } catch (error) {
@@ -306,9 +356,33 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
         <div className="flex h-14 items-center justify-between border-b border-slate-800 bg-slate-900/60 px-6 backdrop-blur-md">
           <h2 className="flex items-center gap-2 text-sm font-bold text-slate-200">
             <Check size={18} className="text-blue-500" />
-            当前选中 {selectedImages.length} 张图片
+            当前选中 {selectedIds.length} 张图片
           </h2>
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleCurrentPageSelection}
+              disabled={displayImages.length === 0 || isSelectingAll}
+              className={`rounded-md border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                allDisplayedSelected
+                  ? 'border-blue-500/40 bg-blue-500/10 text-blue-300'
+                  : 'border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-slate-100'
+              }`}
+            >
+              {allDisplayedSelected ? '取消当前页' : '全选当前页'}
+            </button>
+            <button
+              type="button"
+              onClick={toggleAllPagesSelection}
+              disabled={displayImages.length === 0 || isSelectingAll}
+              className={`rounded-md border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                allPagesSelected
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                  : 'border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
+              }`}
+            >
+              {isSelectingAll ? '全选中...' : allPagesSelected ? '取消全部' : '全选所有页'}
+            </button>
             {queuedImages.length > 0 ? (
               <button
                 type="button"
@@ -447,9 +521,9 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
           <button
             type="button"
             onClick={handleAiAnalysis}
-            disabled={isAiProcessing || selectedImages.length === 0}
+            disabled={isAiProcessing || selectedIds.length === 0}
             className={`mb-5 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all ${
-              isAiProcessing || selectedImages.length === 0
+              isAiProcessing || selectedIds.length === 0
                 ? 'cursor-not-allowed border border-slate-700 bg-slate-800 text-slate-400'
                 : 'border border-emerald-500/30 bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-emerald-400'
             }`}
@@ -531,15 +605,15 @@ export default function BatchTaggingTool({ showToast, storageScope = 'default' }
           <button
             type="button"
             onClick={handleApplyTags}
-            disabled={tagsToAdd.length === 0 || selectedImages.length === 0}
+            disabled={tagsToAdd.length === 0 || selectedIds.length === 0}
             className={`flex w-full items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold text-white transition-all ${
-              tagsToAdd.length === 0 || selectedImages.length === 0
+              tagsToAdd.length === 0 || selectedIds.length === 0
                 ? 'cursor-not-allowed bg-slate-700 text-slate-400'
                 : 'bg-blue-600 shadow-lg shadow-blue-900/20 hover:bg-blue-500'
             }`}
           >
             <Save size={16} />
-            应用到 {selectedImages.length} 张图片
+            应用到 {selectedIds.length} 张图片
           </button>
         </div>
       </div>

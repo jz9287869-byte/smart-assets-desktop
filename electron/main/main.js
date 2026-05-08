@@ -1399,6 +1399,21 @@ ipcMain.handle('images:untagged', async (event, { limit = 50, offset = 0 }) => {
   }
 });
 
+ipcMain.handle('images:untagged-ids', async () => {
+  if (!currentLibrary) {
+    return { success: false, error: '请先选择资源库', ids: [] };
+  }
+
+  try {
+    const ids = typeof currentLibrary.getUntaggedImageIds === 'function'
+      ? currentLibrary.getUntaggedImageIds()
+      : [];
+    return { success: true, ids, total: ids.length };
+  } catch (error) {
+    return { success: false, error: error.message, ids: [] };
+  }
+});
+
 // ==================== IPC 通信：标签管理 ====================
 
 // recovered from corrupted comment
@@ -1693,6 +1708,23 @@ ipcMain.handle('search-images', async (event, query) => {
   }
 });
 
+function withTimeout(promise, timeoutMs, timeoutMessage) {
+  let timer = null;
+  return new Promise((resolve, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(timeoutMessage));
+    }, timeoutMs);
+
+    Promise.resolve(promise)
+      .then(resolve, reject)
+      .finally(() => {
+        if (timer) {
+          clearTimeout(timer);
+        }
+      });
+  });
+}
+
 async function executeNaturalLanguageSearch(payload = {}) {
   const searchState = buildNaturalLanguageSearchState(currentLibrary, payload || {});
   const {
@@ -1712,15 +1744,20 @@ async function executeNaturalLanguageSearch(payload = {}) {
   let cloudRerankCoverage = { scored: 0, total: selectedResults.length };
 
   try {
-    await ensureWorkerReady(currentLibrary);
     if (currentWorker && selectedResults.length) {
-      const rerankResult = await currentWorker.rerankNaturalLanguageMatches(
-        selectedResults,
-        parsedQuery,
-        {
-          query,
-          maxToCompute: 16,
-        }
+      const rerankTimeoutMs = Math.max(800, Math.min(8000, Number(payload.semanticRerankTimeoutMs) || 3500));
+      const rerankResult = await withTimeout(
+        currentWorker.rerankNaturalLanguageMatches(
+          selectedResults,
+          parsedQuery,
+          {
+            query,
+            maxToCompute: 0,
+            skipCloudRerank: true,
+          }
+        ),
+        rerankTimeoutMs,
+        `自然语言语义重排超过 ${rerankTimeoutMs}ms，已先返回数据库匹配结果`
       );
 
       if (rerankResult?.vectorSearchApplied) {

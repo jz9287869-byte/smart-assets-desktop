@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     listImages: (options) => ipcRenderer.invoke('images:list', options),
     naturalSearch: (options) => ipcRenderer.invoke('images:natural-search', options),
     getUntagged: (data) => ipcRenderer.invoke('images:untagged', data),
+    getUntaggedIds: () => ipcRenderer.invoke('images:untagged-ids'),
     getDeleted: (data) => ipcRenderer.invoke('images:deleted', data)
   },
 
