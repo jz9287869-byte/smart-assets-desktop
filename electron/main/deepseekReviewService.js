@@ -176,6 +176,8 @@ class DeepSeekReviewService {
     return [
       'You are a multimodal travel-photo tagging assistant.',
       'Analyze the image and output strict JSON with concise, high-precision labels.',
+      'All label name values must be Simplified Chinese. Do not output English label names.',
+      'Do not output placeholder labels such as unknown, none, n/a, other, or misc.',
       'Required categories are: scene, location, animal, people, device, event.',
       'Each category should be an array of { name, confidence }.',
       'Keep labels sparse and precise. Prefer fewer high-quality tags.',

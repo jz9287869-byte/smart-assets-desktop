@@ -945,6 +945,115 @@ class LibraryDatabase {
     return result;
   }
 
+  normalizeAliasedTags() {
+    const rows = this.db.prepare(`
+      SELECT id, category_id, name, color, created_source
+      FROM tags
+      ORDER BY id ASC
+    `).all();
+
+    if (rows.length === 0) {
+      return { renamed: 0, merged: 0 };
+    }
+
+    const selectLinksByTagId = this.db.prepare(`
+      SELECT image_id, confidence, source, ai_model, created_at
+      FROM image_tags
+      WHERE tag_id = ?
+      ORDER BY id ASC
+    `);
+    const selectDuplicateLink = this.db.prepare(`
+      SELECT id, confidence
+      FROM image_tags
+      WHERE image_id = ? AND tag_id = ? AND source = ?
+      LIMIT 1
+    `);
+    const insertMergedLink = this.db.prepare(`
+      INSERT INTO image_tags (image_id, tag_id, confidence, source, ai_model, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const updateMergedLink = this.db.prepare(`
+      UPDATE image_tags
+      SET confidence = MAX(confidence, ?),
+          ai_model = COALESCE(ai_model, ?)
+      WHERE id = ?
+    `);
+    const deleteLinksByTagId = this.db.prepare(`
+      DELETE FROM image_tags
+      WHERE tag_id = ?
+    `);
+    const renameTagStmt = this.db.prepare(`
+      UPDATE tags
+      SET name = ?
+      WHERE id = ?
+    `);
+    const deleteTagStmt = this.db.prepare(`
+      DELETE FROM tags
+      WHERE id = ?
+    `);
+    const findCanonicalTagStmt = this.db.prepare(`
+      SELECT id, category_id, created_source
+      FROM tags
+      WHERE name = ?
+      ORDER BY
+        CASE WHEN category_id = 'custom' THEN 1 ELSE 0 END ASC,
+        usage_count DESC,
+        id ASC
+      LIMIT 1
+    `);
+    const refreshUsageCountsStmt = this.db.prepare(`
+      UPDATE tags
+      SET usage_count = (
+        SELECT COUNT(*)
+        FROM image_tags
+        WHERE image_tags.tag_id = tags.id
+      )
+    `);
+
+    const result = { renamed: 0, merged: 0 };
+
+    this.db.transaction(() => {
+      for (const row of rows) {
+        const canonicalName = normalizeAITagName(row.name);
+        if (!canonicalName || canonicalName === row.name) {
+          continue;
+        }
+
+        const target = findCanonicalTagStmt.get(canonicalName);
+        if (!target || Number(target.id) === Number(row.id)) {
+          renameTagStmt.run(canonicalName, row.id);
+          result.renamed += 1;
+          continue;
+        }
+
+        const links = selectLinksByTagId.all(row.id);
+        for (const link of links) {
+          const duplicate = selectDuplicateLink.get(link.image_id, target.id, link.source);
+          if (duplicate) {
+            updateMergedLink.run(link.confidence, link.ai_model || null, duplicate.id);
+          } else {
+            insertMergedLink.run(
+              link.image_id,
+              target.id,
+              link.confidence,
+              link.source,
+              link.ai_model || null,
+              link.created_at || null
+            );
+          }
+        }
+
+        deleteLinksByTagId.run(row.id);
+        deleteTagStmt.run(row.id);
+        result.merged += 1;
+      }
+
+      refreshUsageCountsStmt.run();
+    })();
+
+    return result;
+  }
+
   // 删除标签
   deleteTag(tagId) {
     const tag = this.db.prepare(`

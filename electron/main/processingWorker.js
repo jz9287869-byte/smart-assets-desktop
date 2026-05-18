@@ -40,7 +40,11 @@ const AI_GENERIC_BLOCKLIST = new Set([
   '极简',
   '动物',
   '活动',
-  '地点'
+  '地点',
+  '未识别',
+  '无',
+  'unknown',
+  'none'
 ]);
 
 const LOCATION_HINT_TAGS = new Set([
@@ -2289,38 +2293,7 @@ class ProcessingWorker extends EventEmitter {
 
   inferRequiredWeatherName(weatherResult, semanticTags = [], finalTags = []) {
     const explicitWeather = this.normalizeTagName(weatherResult?.label);
-    const mergedTags = [
-      ...(Array.isArray(semanticTags) ? semanticTags : []),
-      ...(Array.isArray(finalTags) ? finalTags : []),
-    ];
-    const hasSunnyHints = this.hasSunnyWeatherHints(mergedTags);
-    const hasCloudyHints = this.hasCloudyWeatherHints(mergedTags);
-
-    if (explicitWeather === '晴天') {
-      return '晴天';
-    }
-
-    if (hasSunnyHints && !['雨天', '雪天', '雾天'].includes(explicitWeather)) {
-      return '晴天';
-    }
-
-    if (['雨天', '雪天', '雾天'].includes(explicitWeather)) {
-      return '阴天';
-    }
-
-    if (explicitWeather === '阴天' && !hasSunnyHints) {
-      return '阴天';
-    }
-
-    if (hasCloudyHints && !hasSunnyHints) {
-      return '阴天';
-    }
-
-    if (hasSunnyHints) {
-      return '晴天';
-    }
-
-    return '晴天';
+    return WEATHER_TAGS.has(explicitWeather) ? explicitWeather : null;
   }
 
   inferRequiredPeopleCountTag(peopleAnalysis, semanticTags = [], finalTags = []) {
@@ -2553,16 +2526,6 @@ class ProcessingWorker extends EventEmitter {
       byName.delete('多人');
     }
 
-    if (!byName.has('晴天') && !byName.has('阴天')) {
-      const weatherName = this.inferRequiredWeatherName(result?.weather || null, semanticTags, Array.from(byName.values()));
-      this.addOrReplaceDerivedTag(byName, {
-        name: weatherName,
-        confidence: 0.64,
-        source: 'ai_weather_floor',
-        category: 'scene'
-      });
-    }
-
     const requiredSeasonName = this.inferRequiredSeasonName([
       ...semanticTags,
       ...Array.from(byName.values())
@@ -2571,14 +2534,6 @@ class ProcessingWorker extends EventEmitter {
       if (seasonName !== requiredSeasonName) {
         byName.delete(seasonName);
       }
-    }
-    if (requiredSeasonName && !byName.has(requiredSeasonName)) {
-      this.addOrReplaceDerivedTag(byName, {
-        name: requiredSeasonName,
-        confidence: 0.63,
-        source: 'ai_season_floor',
-        category: 'scene'
-      });
     }
 
     return Array.from(byName.values()).sort((a, b) => (b.confidence || 0) - (a.confidence || 0));
@@ -2750,7 +2705,10 @@ class ProcessingWorker extends EventEmitter {
       return [];
     }
 
-    const resolvedWeatherName = this.inferRequiredWeatherName(weatherResult, semanticTags, []);
+    const resolvedWeatherName = this.normalizeTagName(weatherResult?.label);
+    if (!WEATHER_TAGS.has(resolvedWeatherName)) {
+      return [];
+    }
 
     return [{
       name: resolvedWeatherName,
@@ -2995,13 +2953,7 @@ class ProcessingWorker extends EventEmitter {
     if (!winnerName || filteredTags.some((tag) => tag.name === winnerName)) {
       return filteredTags;
     }
-
-    return filteredTags.concat({
-      name: winnerName,
-      confidence: 0.63,
-      source: 'ai_season_floor',
-      category: 'scene'
-    });
+    return filteredTags;
   }
 
   limitLocationCandidates(tags, task) {

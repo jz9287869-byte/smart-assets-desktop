@@ -13,6 +13,7 @@
     "setup:local-ai": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-local-ai.ps1",
     "test:ui-smoke": "node scripts/smoke-ui.js",
     "test:backend": "set ELECTRON_RUN_AS_NODE=1&& electron tests/backend/run-tests.js",
+    "cleanup:ai-placeholders": "set ELECTRON_RUN_AS_NODE=1&& electron scripts/cleanup-ai-placeholder-tags.js",
     "audit:aux-tags": "node scripts/evaluate-aux-tags.js",
     "coverage:backend": "set ELECTRON_RUN_AS_NODE=1&& c8 -r text -r lcov electron tests/backend/run-tests.js",
     "build": "electron-builder",

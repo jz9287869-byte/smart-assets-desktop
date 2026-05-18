@@ -40,6 +40,23 @@ export const formatFileSize = (bytes) => {
   return `${size.toFixed(1)} ${units[idx]}`;
 };
 
+const HIDDEN_TAG_NAMES = new Set([
+  '未识别',
+  '无',
+  'unknown',
+  'none',
+  'n/a',
+  'na',
+  'other',
+  'misc',
+]);
+
+export const shouldHideTagName = (tag) => {
+  const raw = String(tag || '').trim();
+  if (!raw) return true;
+  return HIDDEN_TAG_NAMES.has(raw) || HIDDEN_TAG_NAMES.has(raw.toLowerCase());
+};
+
 /**
  * 解析标签字符串
  */
@@ -54,7 +71,7 @@ export const parseTags = (image) => {
 
   const trimmedTags = rawTags
     .map((tag) => String(tag || '').trim())
-    .filter(Boolean);
+    .filter((tag) => tag && !shouldHideTagName(tag));
 
   const uniqueTags = [];
   const seen = new Set();

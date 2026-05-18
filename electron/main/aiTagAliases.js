@@ -25,6 +25,34 @@ const RAW_AI_TAG_ALIASES = [
   ['concert', '\u6f14\u51fa'],
   ['sports', '\u8fd0\u52a8'],
   ['sport', '\u8fd0\u52a8'],
+  ['outdoor', '\u6237\u5916'],
+  ['outdoors', '\u6237\u5916'],
+  ['outside', '\u6237\u5916'],
+  ['food', '\u7f8e\u98df'],
+  ['meal', '\u7f8e\u98df'],
+  ['dish', '\u83dc\u54c1'],
+  ['cuisine', '\u7f8e\u98df'],
+  ['noodles', '\u9762\u6761'],
+  ['noodle', '\u9762\u6761'],
+  ['soup', '\u6c64'],
+  ['meat', '\u8089\u7c7b'],
+  ['fish', '\u9c7c'],
+  ['goose', '\u9e45'],
+  ['geese', '\u9e45'],
+  ['duck', '\u9e2d'],
+  ['chicken', '\u9e21'],
+  ['fork', '\u9910\u53c9'],
+  ['spoon', '\u52fa\u5b50'],
+  ['chopsticks', '\u7b77\u5b50'],
+  ['bowl', '\u7897'],
+  ['plate', '\u76d8\u5b50'],
+  ['tableware', '\u9910\u5177'],
+  ['unknown', '\u672a\u8bc6\u522b'],
+  ['none', '\u672a\u8bc6\u522b'],
+  ['n/a', '\u672a\u8bc6\u522b'],
+  ['na', '\u672a\u8bc6\u522b'],
+  ['other', '\u672a\u8bc6\u522b'],
+  ['misc', '\u672a\u8bc6\u522b'],
   ['mountain', '\u5c71\u5cf0'],
   ['mountains', '\u5c71\u5cf0'],
   ['rainbow', '\u5f69\u8679'],
@@ -94,7 +122,8 @@ function normalizeAITagName(name) {
   if (typeof name !== 'string') return '';
   const trimmed = name.trim();
   if (!trimmed) return '';
-  return AI_TAG_ALIASES.get(normalizeAliasKey(trimmed)) || trimmed;
+  const aliasKey = normalizeAliasKey(trimmed);
+  return AI_TAG_ALIASES.has(aliasKey) ? AI_TAG_ALIASES.get(aliasKey) : trimmed;
 }
 
 module.exports = {

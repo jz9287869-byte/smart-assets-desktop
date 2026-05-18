@@ -51,6 +51,12 @@ async function run() {
       ['sunrise', '\u65e5\u51fa'],
       ['landscape', '\u7eaf\u98ce\u666f'],
       ['morning', '\u65e9\u6668'],
+      ['outdoor', '\u6237\u5916'],
+      ['food', '\u7f8e\u98df'],
+      ['goose', '\u9e45'],
+      ['fork', '\u9910\u53c9'],
+      ['unknown', '\u672a\u8bc6\u522b'],
+      ['none', '\u672a\u8bc6\u522b'],
     ];
 
     for (const [input, expected] of aliasCases) {
@@ -80,6 +86,27 @@ async function run() {
       persisted,
       ['\u5f69\u8679'],
       'persisted AI tags should use normalized Chinese aliases instead of raw English labels'
+    );
+
+    worker.saveAITag(image.id, {
+      name: 'unknown',
+      category: 'scene',
+      confidence: 0.92,
+      source: 'ai',
+    });
+
+    const persistedAfterPlaceholder = db.db.prepare(`
+      SELECT t.name
+      FROM image_tags it
+      JOIN tags t ON t.id = it.tag_id
+      WHERE it.image_id = ?
+      ORDER BY t.name ASC
+    `).all(image.id).map((row) => row.name);
+
+    assert.deepStrictEqual(
+      persistedAfterPlaceholder,
+      ['\u5f69\u8679'],
+      'placeholder AI tags should be filtered out instead of being shown as visible labels'
     );
 
     const legacyTagId = db.addTag('scene', 'sunrise', null, null, 'ai');

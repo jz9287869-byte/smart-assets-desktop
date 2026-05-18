@@ -5,6 +5,12 @@ const IMAGE_FORMATS = Object.freeze([
   '.gif',
   '.bmp',
   '.webp',
+  '.heic',
+  '.heif',
+  '.tif',
+  '.tiff',
+  '.avif',
+  '.dng',
   '.raw',
   '.cr2',
   '.nef',
@@ -30,8 +36,14 @@ const COMMON_VIDEO_FORMATS = Object.freeze([
   '.ts',
 ]);
 
-function isSupportedImageFormat(extension) {
+function normalizeImageExtension(extension) {
   const normalized = String(extension || '').trim().toLowerCase();
+  if (!normalized) return '';
+  return normalized.startsWith('.') ? normalized : `.${normalized}`;
+}
+
+function isSupportedImageFormat(extension) {
+  const normalized = normalizeImageExtension(extension);
   return IMAGE_FORMATS.includes(normalized);
 }
 
@@ -39,5 +51,6 @@ module.exports = {
   IMAGE_FORMATS,
   IMAGE_FORMAT_NAMES,
   COMMON_VIDEO_FORMATS,
+  normalizeImageExtension,
   isSupportedImageFormat,
 };

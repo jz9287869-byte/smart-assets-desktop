@@ -9,6 +9,7 @@ import {
   Tag,
   Trash2,
 } from 'lucide-react';
+import { shouldHideTagName } from '../utils/imageUtils';
 
 const SYSTEM_CATEGORIES = [
   { id: 'scene', name: '场景', icon: '🗺️', sortOrder: 1, isSystem: true },
@@ -72,7 +73,7 @@ export default function TagManager({ showToast }) {
       const grouped = sourceCategories.map((category) => ({
         ...category,
         tags: (tagResult?.tags || [])
-          .filter((tag) => tag.tag_id && tag.category_id === category.id)
+          .filter((tag) => tag.tag_id && tag.category_id === category.id && !shouldHideTagName(tag.tag_name))
           .map((tag) => ({
             id: tag.tag_id,
             name: tag.tag_name,

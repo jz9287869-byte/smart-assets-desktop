@@ -1,4 +1,4 @@
-﻿const assert = require('assert');
+const assert = require('assert');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
@@ -32,7 +32,7 @@ async function run() {
         source: 'ai_weather',
         category: 'scene',
       }],
-      'weather helper should persist sunny tags when threshold and margin both pass'
+      'weather helper should persist explicit sunny tags when threshold and margin both pass'
     );
 
     assert.deepStrictEqual(
@@ -77,12 +77,12 @@ async function run() {
         category: 'scene',
       }]),
       [{
-        name: '\u6674\u5929',
+        name: '\u9634\u5929',
         confidence: 0.29,
         source: 'ai_weather',
         category: 'scene',
       }],
-      'strong sunlight cues should override a weak overcast label and resolve to sunny'
+      'weather helper should keep the AI-selected weather instead of remapping it with local hints'
     );
 
     assert.strictEqual(
@@ -95,8 +95,8 @@ async function run() {
         confidence: 0.58,
         category: 'scene',
       }], []),
-      '\u6674\u5929',
-      'sunlit photos should default to sunny rather than overcast'
+      '\u9634\u5929',
+      'weather inference helper should now only echo explicit AI weather labels'
     );
 
     const imagePath = path.join(libraryPath, 'cleanup-weather.jpg');
@@ -278,5 +278,3 @@ async function run() {
 }
 
 module.exports = run;
-
-
